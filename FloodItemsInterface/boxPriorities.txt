@@ -1,0 +1,3 @@
+Torch: 417
+Boots: 223
+Bottle: 125
