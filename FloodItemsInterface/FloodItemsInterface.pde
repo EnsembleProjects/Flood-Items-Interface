@@ -59,7 +59,6 @@ public class ItemTag{
   public int container;
 }
 
-//Should make inheritance heirarchy eventually?
 public class Item{    
   public String id;
   public String name;
@@ -74,7 +73,7 @@ public class Item{
   public boolean held = false;
   public boolean enlarged = false;
   
-  public int smWid = 150;                          //change this val to change size of scanned objects 
+  public int smWid = 150;                          //change this val to change size of scanned objects (might be buggy, best to leave)
   public int laWid = 300;
   
   public Item(String id, String name){
@@ -82,7 +81,7 @@ public class Item{
     this.name = name;
     this.img = loadImage("graphics/" + name + ".png");
     this.descrip = loadStrings("descrips/" + name + "Descrip.txt");
-    int factor = smWid/img.width;
+    int factor = smWid/img.width;                  //might be able to get rid of these 2 lines, since resizing occurs in draw method
     img.resize(smWid, img.height*factor);
   }
   
