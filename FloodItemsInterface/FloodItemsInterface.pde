@@ -4,7 +4,7 @@
 import java.util.Map;
 import processing.serial.*;
 
-int numItems = 4;
+int numItems = 24;        //change to show number of items included
 
 int windWid;              //assigned in setup()
 int windHei;
@@ -20,16 +20,21 @@ int nameTxtSz = 50;       //size of item names (e.g. 'Button') when clicked on/s
 int descripTxtSz = 30;    //size of item descriptions when clicked on/scanned
 int botTxtSz = 20;        //size of text that appears at bottom of screen
 int topTxtSz = 30;        //size of text that appears at top of screen
-int stgeTxtSz = 40;       //size of text that shows stage (e.g. 'Stage 1/3')
+int stgeTxtSz = 20;       //size of text that shows stage (e.g. 'Stage 1/3')
 
 int infoWid;              //assigned in setup()
 int infoHei;
 
-int dButWid = 200;        //the default button width, height, x, y, and colour
-int dButHei = 100;
+
+int dButWid = 100;        //the default button width, height, x, y, and colour
+int dButHei = 30;
+//int dButWid = 200;        //previousthe default button width, height, x, y, and colour
+//int dButHei = 100;
 int dButX;                //assigned in setup()
 int dButY;
-color dBut = color(200, 200, 255);
+//color dBut = color(200, 200, 255);
+color dBut = color(67, 49, 167); //this is temp - would prefer to use background image
+PImage but1; 
 
 boolean clickAct = false;  //ensures only 1 object reacts to a 'click'; true if a object has reacted to a click; resets on click release.
 boolean backAct = false;   //true if BACKSPACE pressed but inStr is empty
@@ -59,6 +64,7 @@ public class ItemTag{
   public int container;
 }
 
+//Should make inheritance heirarchy eventually?
 public class Item{    
   public String id;
   public String name;
@@ -73,15 +79,16 @@ public class Item{
   public boolean held = false;
   public boolean enlarged = false;
   
-  public int smWid = 150;                          //change this val to change size of scanned objects (might be buggy, best to leave)
-  public int laWid = 300;
+ // public int smWid = 150;                          //change this val to change size of scanned objects 
+  public int smWid = 100; 
+  public int laWid = 500;
   
   public Item(String id, String name){
     this.id = id;
     this.name = name;
     this.img = loadImage("graphics/" + name + ".png");
     this.descrip = loadStrings("descrips/" + name + "Descrip.txt");
-    int factor = smWid/img.width;                  //might be able to get rid of these 2 lines, since resizing occurs in draw method
+    int factor = smWid/img.width;
     img.resize(smWid, img.height*factor);
   }
   
@@ -118,7 +125,8 @@ public class Item{
       if (this.container == 2) imgX = windWid/2; //if in the bag, will draw on the back side
       float factor = float(laWid/img.width);
       img.resize(laWid, int(img.height*factor));
-      image(img, imgX, txtLine+labTxtSz+0);
+      //blurry image here
+      image(img, imgX, txtLine+labTxtSz-10);//change vertical position but be aware that moving up too far could overlap text
     }      
     else {
       float factor = float(smWid/img.width);
@@ -140,56 +148,60 @@ public class Item{
     int infoY = txtLine+descripEdge;
     if (this.container == 1) infoX = (windWid/2)+descripEdge;
     else infoX = descripEdge;
-    
-    fill(200, 200, 255);
+     
+     
+ fill(200, 200, 255);
     //strokeWeight(2);
     rect(infoX, infoY, infoWid, infoHei);
-    fill(0, 0, 0);
+    
+    fill(255, 255, 255); //text colour
     addText(this.name, infoX+5, infoY+5, nameTxtSz, "L", "T");
     for (int i = 0; i < descrip.length; i++){
       addText(descrip[i], infoX+5, infoY+nameTxtSz+10+(i*descripTxtSz), descripTxtSz, "L", "T");
     }
 
     //rationale part below
-    int rY = infoY+int(infoHei-200);
-    addText("Rationale", infoX+5, rY-(descripTxtSz+5), descripTxtSz+10, "L", "T");
-    //println("rLength: " + this.rationale.length + " | rLine: " + rLine);    
-    println(rY+(descripTxtSz*(rLine+1)) + " vs " + (infoY+infoHei));
-    if (this.rationale.length > rLine+1) this.rationale = shorten(this.rationale);
-    else if (this.rationale.length == rLine) this.rationale = append(this.rationale, ""); //if the line we're on doesn't exist, append a new line
     
-    textSize(descripTxtSz);
-    boolean exceedX = (textWidth(inStr) > infoWid-5);  //am I currently exceeding the info space  
-    boolean exceedY = ((rY+(descripTxtSz*(rLine+1)) > (infoY+infoHei))); //would the next line exceed the info space   
+    //int rY = infoY+int(infoHei-200);
+    //addText("Rationale", infoX+5, rY-(descripTxtSz+5), descripTxtSz+10, "L", "T");
+    ////println("rLength: " + this.rationale.length + " | rLine: " + rLine);    
+    ////println(rY+(descripTxtSz*(rLine+1)) + " vs " + (infoY+infoHei));
+    //if (this.rationale.length > rLine+1) this.rationale = shorten(this.rationale);
+    //else if (this.rationale.length == rLine) this.rationale = append(this.rationale, ""); //if the line we're on doesn't exist, append a new line
+    
+    //textSize(descripTxtSz);
+    //boolean exceedX = (textWidth(inStr) > infoWid-5);  //am I currently exceeding the info space  
+    //boolean exceedY = ((rY+(descripTxtSz*(rLine+1)) > (infoY+infoHei))); //would the next line exceed the info space   
 
-    if ((!exceedX && !exceedY) && alternator(500)) line(infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine+1)*descripTxtSz), infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine)*descripTxtSz));    
-    print(rLine);
+    //if ((!exceedX && !exceedY) && alternator(500)) line(infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine+1)*descripTxtSz), infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine)*descripTxtSz));    
+    //print(rLine);
     
-    if (exceedX){
-      char lastChar = inStr.charAt(inStr.length()-1);
-      println(lastChar);
-      inStr = str(lastChar);
-      //rLine++;
-        if (!exceedY) rLine++;
-    }   
-    else if (!exceedY) this.rationale[rLine] = inStr;
-    else inStr = "";
+    //if (exceedX){
+    //  char lastChar = inStr.charAt(inStr.length()-1);
+    //  println(lastChar);
+    //  inStr = str(lastChar);
+    //  //rLine++;
+    //    if (!exceedY) rLine++;
+    //}   
+    //else if (!exceedY) this.rationale[rLine] = inStr;
+    //else inStr = "";
     
-    if (keyCode == ENTER && !inStr.equals("")){  // needs to be first to avoid Exception w/ input-line-draw | ensures less than 15 items
-      inStr = "";
-      rLine++;
-    }
+    //if (keyCode == ENTER && !inStr.equals("")){  // needs to be first to avoid Exception w/ input-line-draw | ensures less than 15 items
+    //  inStr = "";
+    //  rLine++;
+    //}
     
-    if (inStr.equals("") && keyCode == BACKSPACE && rLine > 0){
-      rLine--;
-      inStr = this.rationale[rLine];
-    }   
+    //if (inStr.equals("") && keyCode == BACKSPACE && rLine > 0){
+    //  rLine--;
+    //  inStr = this.rationale[rLine];
+    //}   
 
-    for (int i = 0; i < this.rationale.length; i++){
-      addText(this.rationale[i], infoX+5, rY+(descripTxtSz*i), descripTxtSz, "L", "T");
-      line(infoX+5, rY+(descripTxtSz*(i+1)), infoX+infoWid-10, rY+(descripTxtSz*(i+1)));
-    }
-
+    //for (int i = 0; i < this.rationale.length; i++){
+    //  addText(this.rationale[i], infoX+5, rY+(descripTxtSz*i), descripTxtSz, "L", "T");
+    //  line(infoX+5, rY+(descripTxtSz*(i+1)), infoX+infoWid-10, rY+(descripTxtSz*(i+1)));
+    //}
+    
+    
     close = new Button("X", infoX+infoWid-60-5, infoY+5, 60, 60, color(255,200,200));
     close.drawSelf();
   }
@@ -283,10 +295,10 @@ public class Button{
     noStroke();
     fill(col);
     rect(x, y, wid, hei);
-    fill(0, 0, 0);
-    addText(txt, x+(wid/2)-2, y+(hei/2)-2, hei/2, "C", "C");
+    fill(255, 255, 255);
+    addText(txt, x+(wid/2)-2, y+(hei/2)-2, hei/2, "C", "C"); //text is half height of button
     
-    stroke(0);
+    stroke(67, 49, 167);
   }
   
   public void changeTxt(String t){
@@ -322,35 +334,85 @@ void setup(){
   floodBox = loadImage("graphics/floodBox.gif");
   emergBag = loadImage("graphics/emergBag.png");
   
-  rBut = new Button("DONE", dButX, dButY, dButWid, dButHei, dBut);
-  lBut = new Button("BACK", 10, dButY, dButWid, dButHei, dBut);
+  rBut = new Button("Done", dButX, dButY, dButWid, dButHei, dBut);
+  lBut = new Button("Back", 10, dButY, dButWid, dButHei, dBut);
     
   //ADD NFC TAG IDS ALONGSIDE THEIR ITEM NAMES HERE | ITEM NAMES SHOULD MATCH GRAPHICS & DESCRIP NAMES  
-  crateItems[0] = new Item("17846141", "Torch");
-  crateItems[1] = new Item("18291181", "Boots");
-  crateItems[2] = new Item("18366317", "Bottle");
-  crateItems[3] = new Item("18742141", "Bear");
+  
+  //old tags
+//crateItems[0] = new Item("17846141", "Torch");
+ // crateItems[1] = new Item("18291181", "Boots");
+ // crateItems[2] = new Item("18366317", "Bottle");
+  //crateItems[3] = new Item("18742141", "Bear");
+   
+  
+  //new tags
+  crateItems[0] = new Item("18323229", "Insurance");
+  crateItems[1] = new Item("18724189", "Mobile");
+  crateItems[2] = new Item("18324685", "Cash");
+  crateItems[3] = new Item("18645805", "Medication");
+  crateItems[4] = new Item("17834525", "Babyfood");
+  crateItems[5] = new Item("18585933", "Babybottle");
+  crateItems[6] = new Item("18760461", "Nappies");
+  crateItems[7] = new Item("18286413", "Nappybags");
+  crateItems[8] = new Item("18804301", "Babyclothes");
+  crateItems[9] = new Item("17849405", "Toy");
+  crateItems[10] = new Item("18482685", "Camera");
+  crateItems[11] = new Item("18130013", "Info");
+  crateItems[12] = new Item("18478365", "Torch");
+  crateItems[13] = new Item("17804269", "Batteries");
+  crateItems[14] = new Item("18292445", "Radio");
+  crateItems[15] = new Item("17995821", "Food");
+  crateItems[16] = new Item("17962525", "Water");
+  crateItems[17] = new Item("18454525", "Washkit");
+  crateItems[18] = new Item("18419453", "Cards");
+  crateItems[19] = new Item("18421933", "Blanket");
+  crateItems[20] = new Item("18597805", "Boots");
+  crateItems[21] = new Item("18403213", "Waterproof");
+  crateItems[22] = new Item("17824605", "Gloves");
+  crateItems[23] = new Item("18032317", "Firstaid");
+ 
+  
+  
+  //extras
+  //crateItems[24] = new Item("18331069", "Firstaid");
+  //crateItems[25] = new Item("18032317", "Firstaid");
+  //crateItems[26] = new Item("18349901", "Firstaid");
+ // crateItems[27] = new Item("18549581", "Firstaid");
+  //crateItems[28] = new Item("18132429", "Firstaid");
+ // crateItems[29] = new Item("18274109", "Firstaid");
+  //crateItems[30] = new Item("18645805", "Firstaid");  //tag assigned
+ // crateItems[31] = new Item("18324685", "Firstaid");  //tag assigned
+ // crateItems[32] = new Item("18724189", "Firstaid");  //tag assigned
+ // crateItems[33] = new Item("18323229", "Firstaid");  //tag assigned
+ //crateItems[23] = new Item("17885661", "Firstaid");
+ // crateItems[0] = new Item("17885661", "Firstaid");
+  
   
   //surface.setSize(windWid, windHei);
-  font = createFont("Candara", 30);
+ // font = createFont("Candara", 30);
+ font = createFont("Roboto Slab", 20);
   textFont(font); //actives the font, apperently
   resetDefaults();
   
-  boxPort = new Serial(this, "COM4", 9600);
+  //boxPort = new Serial(this, "COM4", 9600);
+  boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);
   boxPort.buffer(10);
   boxPort.clear();
   
-  bagPort = new Serial(this, "COM5", 9600);
+ // bagPort = new Serial(this, "COM5", 9600);
+  bagPort = new Serial(this, "/dev/tty.usbmodem1A1221", 9600);
   bagPort.buffer(10);
   bagPort.clear();
   
   //printPort = new Serial(this, "COM3", 19200);
+ // printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);
   
 }
 
 void startScreen(){
   //println("0");  //debug
-  addText("Welcome! Please take a seat", windWid/2, windHei/2-100, 90, "C", "C");
+  addText("Welcome!", windWid/2, windHei/2-100, 90, "C", "C");
   addText("CLICK to begin", windWid/2, windHei/2+100, 50, "C", "C");
   if (mousePressed){
     clickAct = true;  //prevents buttons on next screen activating
@@ -470,7 +532,7 @@ void activity1(){
   }
   if (a1Items.length >= 0 && rBut.clicked()){ //!!!SHOULD BE 5 (0 for debug)
     slideNum = 1;
-    rBut.changeTxt("NEXT");
+    rBut.changeTxt("Next");
     state = "transit1to2";
   }
 }
@@ -583,7 +645,7 @@ void activity2(){
     for (int i = 0; i < crateItems.length; i++) crateItems[i].enlarged = false; //resets the enlargement of all
     inStr = "";
     state = "transit2to3";
-    rBut.changeTxt("NEXT");
+    rBut.changeTxt("Next");
     slideNum = 1;
   }
 }
@@ -596,7 +658,7 @@ void transit2to3(){
     case 1:
       if (!PPname.equals("")) addText("Brilliant " + PPname + "!", windWid/2, 200, 90, "C", "C");
       else addText("Brilliant!", windWid/2, 200, 100, "C", "C");
-      addText("Lastly, please move the items you have chosen up or down", windWid/2, 350, 50, "C", "C");
+      addText("Lastly, please move the items you have chosen up or down", windWid/2, 350, 50, "C", "C"); //change 3rd value for text scale 
       addText("based on how important you believe they are.", windWid/2, 450, 50, "C", "C");
       break;
     case 2:
@@ -617,7 +679,7 @@ void transit2to3(){
 }
 
 void activity3(){
-  image(gradient, sWei, txtLine);
+ image(gradient, sWei, txtLine);
   addText("Move items you feel are most important higher, and less important lower", txtEdge, txtLine/2, topTxtSz, "L", "C");
   addText("Stage 3/3", windWid-txtEdge, txtLine/2, stgeTxtSz, "R", "C");
   line(0, txtLine, windWid, txtLine);
@@ -671,7 +733,7 @@ void preReport(){
         a1Items = shorten(a1Items);  //removes the empty field - this empty will return if user goes back
       }
       makeReport();
-      rBut.changeTxt("SAVE");
+      rBut.changeTxt("Save");
       state = "report";
     }
   }
@@ -897,13 +959,15 @@ void addText(String txt, int x, int y, int size, String aliX, String aliY){
 void resetDefaults(){
   //strokeWeight(bgSWei);
   stroke(0);
-  background(0, 0, 0);
-  fill(240, 240, 255);
+
+  //background(0, 0, 0);
+  background(34, 22, 122);
+  fill(34, 22, 122);
   noStroke();
   rect(sWei, sWei, windWid-(sWei*2), windHei-(sWei*2));
-  stroke(0);
+ stroke(67, 49, 167);
   strokeWeight(sWei);
-  fill(0,0,0);
+  fill(255, 255, 255);
 }
 
 void serialEvent(Serial port){  //make class that extends port to include id
