@@ -26,15 +26,15 @@ int infoWid;              //assigned in setup()
 int infoHei;
 
 
-int dButWid = 100;        //the default button width, height, x, y, and colour
+int dButWid = 100;          //the default button width, height, x, y, and colour
 int dButHei = 30;
-//int dButWid = 200;        //previousthe default button width, height, x, y, and colour
+//int dButWid = 200;        //previous the default button width, height, x, y, and colour
 //int dButHei = 100;
 int dButX;                //assigned in setup()
 int dButY;
 //color dBut = color(200, 200, 255);
 color dBut = color(67, 49, 167); //this is temp - would prefer to use background image
-PImage but1; 
+PImage but1;               //Liz
 
 boolean clickAct = false;  //ensures only 1 object reacts to a 'click'; true if a object has reacted to a click; resets on click release.
 boolean backAct = false;   //true if BACKSPACE pressed but inStr is empty
@@ -161,53 +161,52 @@ public class Item{
     }
 
     //rationale part below
+    /*
+    int rY = infoY+int(infoHei-200);
+    //println("rLength: " + this.rationale.length + " | rLine: " + rLine);    
+    //println(rY+(descripTxtSz*(rLine+1)) + " vs " + (infoY+infoHei));
+    if (this.rationale.length > rLine+1) this.rationale = shorten(this.rationale);
+    else if (this.rationale.length == rLine) this.rationale = append(this.rationale, ""); //if the line we're on doesn't exist, append a new line
     
-    //int rY = infoY+int(infoHei-200);
-    //addText("Rationale", infoX+5, rY-(descripTxtSz+5), descripTxtSz+10, "L", "T");
-    ////println("rLength: " + this.rationale.length + " | rLine: " + rLine);    
-    ////println(rY+(descripTxtSz*(rLine+1)) + " vs " + (infoY+infoHei));
-    //if (this.rationale.length > rLine+1) this.rationale = shorten(this.rationale);
-    //else if (this.rationale.length == rLine) this.rationale = append(this.rationale, ""); //if the line we're on doesn't exist, append a new line
-    
-    //textSize(descripTxtSz);
-    //boolean exceedX = (textWidth(inStr) > infoWid-5);  //am I currently exceeding the info space  
-    //boolean exceedY = ((rY+(descripTxtSz*(rLine+1)) > (infoY+infoHei))); //would the next line exceed the info space   
+    textSize(descripTxtSz);
+    boolean exceedX = (textWidth(inStr) > infoWid-5);  //am I currently exceeding the info space  
+    boolean exceedY = ((rY+(descripTxtSz*(rLine+1)) > (infoY+infoHei))); //would the next line exceed the info space   
 
-    //if ((!exceedX && !exceedY) && alternator(500)) line(infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine+1)*descripTxtSz), infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine)*descripTxtSz));    
-    //print(rLine);
+    if ((!exceedX && !exceedY) && alternator(500)) line(infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine+1)*descripTxtSz), infoX+textWidth(this.rationale[rLine])+inputLineBuff, rY+((rLine)*descripTxtSz));    
+    print(rLine);
     
-    //if (exceedX){
-    //  char lastChar = inStr.charAt(inStr.length()-1);
-    //  println(lastChar);
-    //  inStr = str(lastChar);
-    //  //rLine++;
-    //    if (!exceedY) rLine++;
-    //}   
-    //else if (!exceedY) this.rationale[rLine] = inStr;
-    //else inStr = "";
+    if (exceedX){
+      char lastChar = inStr.charAt(inStr.length()-1);
+      println(lastChar);
+      inStr = str(lastChar);
+      //rLine++;
+        if (!exceedY) rLine++;
+    }   
+    else if (!exceedY) this.rationale[rLine] = inStr;
+    else inStr = "";
     
-    //if (keyCode == ENTER && !inStr.equals("")){  // needs to be first to avoid Exception w/ input-line-draw | ensures less than 15 items
-    //  inStr = "";
-    //  rLine++;
-    //}
+    if (keyCode == ENTER && !inStr.equals("")){  // needs to be first to avoid Exception w/ input-line-draw | ensures less than 15 items
+      inStr = "";
+      rLine++;
+    }
     
-    //if (inStr.equals("") && keyCode == BACKSPACE && rLine > 0){
-    //  rLine--;
-    //  inStr = this.rationale[rLine];
-    //}   
+    if (inStr.equals("") && keyCode == BACKSPACE && rLine > 0){
+      rLine--;
+      inStr = this.rationale[rLine];
+    }   
 
-    //for (int i = 0; i < this.rationale.length; i++){
-    //  addText(this.rationale[i], infoX+5, rY+(descripTxtSz*i), descripTxtSz, "L", "T");
-    //  line(infoX+5, rY+(descripTxtSz*(i+1)), infoX+infoWid-10, rY+(descripTxtSz*(i+1)));
-    //}
-    
+    for (int i = 0; i < this.rationale.length; i++){
+      addText(this.rationale[i], infoX+5, rY+(descripTxtSz*i), descripTxtSz, "L", "T");
+      line(infoX+5, rY+(descripTxtSz*(i+1)), infoX+infoWid-10, rY+(descripTxtSz*(i+1)));
+    }
+    */
     
     close = new Button("X", infoX+infoWid-60-5, infoY+5, 60, 60, color(255,200,200));
     close.drawSelf();
   }
   
   public boolean clicked(){
-    if (!enlarged && mouseOver() && mousePressed && !clickAct){  //ensures mutex
+    if (!enlarged && mousePressedOver() && mousePressed && !clickAct){  //ensures mutex
       clickAct = true;
       return true;
     }
@@ -251,7 +250,7 @@ public class Item{
     return false;
   }
   
-  public boolean mouseOver(){
+  public boolean mousePressedOver(){
     int tempX = this.x;
     int tempY = this.y;
     if (mPressX >= tempX && mPressX <= tempX+img.width && mPressY >= tempY && mPressY <= tempY+img.height){
@@ -277,7 +276,7 @@ public class Button{
   }
   
   public boolean clicked(){
-    if (mouseOver() && mousePressed && !clickAct){  //ensures mutex
+    if (mousePressedOver() && mousePressed && !clickAct){  //ensures mutex
       //println("! click");
       clickAct = true;
       return true;
@@ -285,8 +284,14 @@ public class Button{
     else return false;
   }
   
-  public boolean mouseOver(){
+  public boolean mousePressedOver(){
     if (mPressX >= x && mPressX <= x+wid && mPressY >= y && mPressY <= y+hei)
+      return true;
+    else return false;
+  }
+  
+  public boolean mouseHoverOver(){
+    if (mouseX >= x && mouseX <= x+wid && mouseY >= y && mouseY <= y+hei)
       return true;
     else return false;
   }
@@ -294,10 +299,14 @@ public class Button{
   public void drawSelf(){
     noStroke();
     fill(col);
-    rect(x, y, wid, hei);
-    fill(255, 255, 255);
+    //rect(x, y, wid, hei);
+    image(but1, x, y);                     //Liz
+    
+    if (mouseHoverOver()) fill(0, 0, 0);  //colour when mouse is hovering over
+    else fill(255, 255, 255);             //colour when mouse is not^
     addText(txt, x+(wid/2)-2, y+(hei/2)-2, hei/2, "C", "C"); //text is half height of button
     
+    fill(255, 255, 255);                 //reset colour back to black
     stroke(67, 49, 167);
   }
   
@@ -315,11 +324,10 @@ Serial boxPort;
 Serial printPort;
 ItemTag latestScan = new ItemTag();
 String tagID = "";
-String prvsTagID = "";  //NOT USING this atm, might get rid of if no use with 2 NFC implementation
 
 void setup(){
-  //fullScreen();
-  size(1300, 700);
+  //fullScreen();                  //uncomment this and comment the below to make fullscreen
+  size(1300, 700);             //do the opposite to ^ to make windowed
   windWid = width;
   windHei = height;
   
@@ -333,6 +341,8 @@ void setup(){
   gradient.resize(windWid-(sWei*2), windHei-txtLine-sWei);
   floodBox = loadImage("graphics/floodBox.gif");
   emergBag = loadImage("graphics/emergBag.png");
+  but1 = loadImage("graphics/but1.gif");                   //Liz
+  but1.resize(dButWid, dButHei);                           //Liz
   
   rBut = new Button("Done", dButX, dButY, dButWid, dButHei, dBut);
   lBut = new Button("Back", 10, dButY, dButWid, dButHei, dBut);
@@ -340,11 +350,12 @@ void setup(){
   //ADD NFC TAG IDS ALONGSIDE THEIR ITEM NAMES HERE | ITEM NAMES SHOULD MATCH GRAPHICS & DESCRIP NAMES  
   
   //old tags
-//crateItems[0] = new Item("17846141", "Torch");
- // crateItems[1] = new Item("18291181", "Boots");
- // crateItems[2] = new Item("18366317", "Bottle");
-  //crateItems[3] = new Item("18742141", "Bear");
-   
+  /*
+  crateItems[0] = new Item("17846141", "Torch");
+  crateItems[1] = new Item("18291181", "Boots");
+  crateItems[2] = new Item("18366317", "Bottle");
+  crateItems[3] = new Item("18742141", "Bear");
+  */ 
   
   //new tags
   crateItems[0] = new Item("18323229", "Insurance");
@@ -395,6 +406,8 @@ void setup(){
   textFont(font); //actives the font, apperently
   resetDefaults();
   
+  /* !!! Below commented out for Edward's PC to run without Arduinos connected
+  
   //boxPort = new Serial(this, "COM4", 9600);
   boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);
   boxPort.buffer(10);
@@ -407,6 +420,8 @@ void setup(){
   
   //printPort = new Serial(this, "COM3", 19200);
  // printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);
+ 
+ */
   
 }
 
@@ -421,6 +436,7 @@ void startScreen(){
   }
 }
 
+int count = 0;
 void nameEntry(){
   int lineY = 350;
   int lineX = 100;
@@ -579,8 +595,10 @@ void transit1to2(){
     else {
       inStr = "";
       latestScan = new ItemTag();        //resets tagID before activity2
+      /* !!! Below commented out for Edward's PC to run without Arduinos connected
       boxPort.clear();
       bagPort.clear();
+      */
       rBut.changeTxt("DONE");
       state = "activity2";
     }
@@ -628,7 +646,7 @@ void activity2(){
       crateItems[i].drawImg();
       //if (crateItems[i].enlarged) crateItems[i].drawDescrip();
       //crateItems[i].heldDrag();
-      //println("item held: " + crateItems[i].held + " | mouseover: " + crateItems[i].mouseOver() + " | act: " + clickAct);
+      //println("item held: " + crateItems[i].held + " | mouseover: " + crateItems[i].mousePressedOver() + " | act: " + clickAct);
     }
   }
   for (int i = 0; i < crateItems.length; i++){
@@ -679,7 +697,7 @@ void transit2to3(){
 }
 
 void activity3(){
- image(gradient, sWei, txtLine);
+  image(gradient, sWei, txtLine);
   addText("Move items you feel are most important higher, and less important lower", txtEdge, txtLine/2, topTxtSz, "L", "C");
   addText("Stage 3/3", windWid-txtEdge, txtLine/2, stgeTxtSz, "R", "C");
   line(0, txtLine, windWid, txtLine);
@@ -957,7 +975,6 @@ void addText(String txt, int x, int y, int size, String aliX, String aliY){
 }  
 
 void resetDefaults(){
-  //strokeWeight(bgSWei);
   stroke(0);
 
   //background(0, 0, 0);
@@ -965,7 +982,7 @@ void resetDefaults(){
   fill(34, 22, 122);
   noStroke();
   rect(sWei, sWei, windWid-(sWei*2), windHei-(sWei*2));
- stroke(67, 49, 167);
+  stroke(67, 49, 167);
   strokeWeight(sWei);
   fill(255, 255, 255);
 }
