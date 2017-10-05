@@ -70,7 +70,8 @@ public class Item{
   public String name;
   public int x, y, container;
   public int rLine = 0;
-  public PImage img;
+  public PImage smImg;
+  public PImage laImg;
   public String[] descrip;
   public String[] rationale = {};
   public Button close;
@@ -86,10 +87,10 @@ public class Item{
   public Item(String id, String name){
     this.id = id;
     this.name = name;
-    this.img = loadImage("graphics/" + name + ".png");
-    this.descrip = loadStrings("descrips/" + name + "Descrip.txt");
-    int factor = smWid/img.width;
+    PImage img = loadImage("graphics/" + name + ".png");
+    int factor = laWid/img.width; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     img.resize(smWid, img.height*factor);
+    this.descrip = loadStrings("descrips/" + name + "Descrip.txt");
   }
   
   public void unenlarge(){
@@ -163,6 +164,7 @@ public class Item{
     //rationale part below
     /*
     int rY = infoY+int(infoHei-200);
+    addText("Rationale", infoX+5, rY-(descripTxtSz+5), descripTxtSz+10, "L", "T");
     //println("rLength: " + this.rationale.length + " | rLine: " + rLine);    
     //println(rY+(descripTxtSz*(rLine+1)) + " vs " + (infoY+infoHei));
     if (this.rationale.length > rLine+1) this.rationale = shorten(this.rationale);
