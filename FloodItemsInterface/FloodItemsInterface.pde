@@ -34,7 +34,6 @@ int dButX;                //assigned in setup()
 int dButY;
 //color dBut = color(200, 200, 255);
 color dBut = color(67, 49, 167); //this is temp - would prefer to use background image
-PImage but1;               //Liz
 
 boolean clickAct = false;  //ensures only 1 object reacts to a 'click'; true if a object has reacted to a click; resets on click release.
 boolean backAct = false;   //true if BACKSPACE pressed but inStr is empty
@@ -87,9 +86,14 @@ public class Item{
   public Item(String id, String name){
     this.id = id;
     this.name = name;
-    PImage img = loadImage("graphics/" + name + ".png");
-    int factor = laWid/img.width; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    img.resize(smWid, img.height*factor);
+    this.laImg = loadImage("graphics/" + name + ".png");
+    int laFactor = laWid/laImg.width; 
+    this.laImg.resize(laWid, laImg.height*laFactor);
+    
+    this.smImg = loadImage("graphics/" + name + ".png");;
+    int smFactor = smWid/smImg.width; 
+    this.smImg.resize(smWid, smImg.height*smFactor);
+    
     this.descrip = loadStrings("descrips/" + name + "Descrip.txt");
   }
   
@@ -104,35 +108,32 @@ public class Item{
     int minX, maxX;
     if (this.container == 1){
       minX = 0;
-      maxX = windWid/2 - img.width;
+      maxX = windWid/2 - smImg.width;
     }
     else {
       minX = windWid/2;
-      maxX = windWid - img.width;
+      maxX = windWid - smImg.width;
     }
     int attempts = 0;  //debug only
     do {
       //println("re-trying to place");
       attempts++;
       this.x = int(random(minX, maxX));
-      this.y = int(random(txtLine+labTxtSz, (windHei-img.height-(dButHei-10))));  //accounts for dButs aswell
+      this.y = int(random(txtLine+labTxtSz, (windHei-smImg.height-(dButHei-10))));  //accounts for dButs aswell
     } while (detectCollision());
     //println(attempts);
   }
   
   public void drawImg(){
     if (enlarged){
+      println("enlarged");
       int imgX = 0;
       if (this.container == 2) imgX = windWid/2; //if in the bag, will draw on the back side
-      float factor = float(laWid/img.width);
-      img.resize(laWid, int(img.height*factor));
-      //blurry image here
-      image(img, imgX, txtLine+labTxtSz-10);//change vertical position but be aware that moving up too far could overlap text
+      image(laImg, imgX, txtLine+labTxtSz-10);//change vertical position but be aware that moving up too far could overlap text
     }      
     else {
-      float factor = float(smWid/img.width);
-      img.resize(smWid, int(img.height*factor));
-      image(img, x, y);
+      println("not enlarged");
+      image(smImg, x, y);
     }
   }
   
@@ -222,8 +223,8 @@ public class Item{
     if (held == true){
       if ((mouseX > 0 && mouseX < windWid && mouseY > txtLine && mouseY < windHei)
       && ((this.container == 1 && mouseX < windWid/2) || (this.container == 2 && mouseX > windWid/2))){
-          x = mouseX-(img.width/2);
-          y = mouseY-(img.height/2);
+          x = mouseX-(smImg.width/2);
+          y = mouseY-(smImg.height/2);
       }
       if (!clickAct) held = false;
     }
@@ -236,12 +237,12 @@ public class Item{
         //print(" | " + i + " is present");
         int myX = this.x +allowance;
         int myY = this.y +allowance;
-        int myWid = this.img.width -allowance;
-        int myHei = this.img.height -allowance;
+        int myWid = this.smImg.width -allowance;
+        int myHei = this.smImg.height -allowance;
         int chalX = crateItems[i].x +allowance;
         int chalY = crateItems[i].y +allowance;
-        int chalWid = crateItems[i].img.width -allowance;
-        int chalHei = crateItems[i].img.height -allowance;
+        int chalWid = crateItems[i].smImg.width -allowance;
+        int chalHei = crateItems[i].smImg.height -allowance;
         if ((chalX + chalWid) >= myX && chalX <= (myX+myWid) &&         //if challenger's right (edge) >= my left AND challenger's left <= my right              
             (chalY + chalHei) >= myY && chalY <= (myY+myHei)){          //AND challenger's top >= my bottom AND challenger's bottom <= my top
               //print(" | it does collide");
@@ -255,7 +256,7 @@ public class Item{
   public boolean mousePressedOver(){
     int tempX = this.x;
     int tempY = this.y;
-    if (mPressX >= tempX && mPressX <= tempX+img.width && mPressY >= tempY && mPressY <= tempY+img.height){
+    if (mPressX >= tempX && mPressX <= tempX+smImg.width && mPressY >= tempY && mPressY <= tempY+smImg.height){
       return true;
     }
     else return false;
@@ -266,6 +267,7 @@ public class Button{
   public String txt;
   public int x, y, wid, hei;
   public color col;
+  public PImage butImg;
   
   public Button(String t, int x, int y, int w, int h, color c){
     this.txt = t;
@@ -274,7 +276,8 @@ public class Button{
     this.wid = w;
     this.hei = h;
     this.col = c;
-    //this.drawSelf();
+    this.butImg = loadImage("graphics/but1.gif"); //Liz
+    butImg.resize(w, h);
   }
   
   public boolean clicked(){
@@ -302,7 +305,7 @@ public class Button{
     noStroke();
     fill(col);
     //rect(x, y, wid, hei);
-    image(but1, x, y);                     //Liz
+    image(butImg, x, y);                     //Liz
     
     if (mouseHoverOver()) fill(0, 0, 0);  //colour when mouse is hovering over
     else fill(255, 255, 255);             //colour when mouse is not^
@@ -343,8 +346,6 @@ void setup(){
   gradient.resize(windWid-(sWei*2), windHei-txtLine-sWei);
   floodBox = loadImage("graphics/floodBox.gif");
   emergBag = loadImage("graphics/emergBag.png");
-  but1 = loadImage("graphics/but1.gif");                   //Liz
-  but1.resize(dButWid, dButHei);                           //Liz
   
   rBut = new Button("Done", dButX, dButY, dButWid, dButHei, dBut);
   lBut = new Button("Back", 10, dButY, dButWid, dButHei, dBut);
@@ -408,8 +409,6 @@ void setup(){
   textFont(font); //actives the font, apperently
   resetDefaults();
   
-  /* !!! Below commented out for Edward's PC to run without Arduinos connected
-  
   //boxPort = new Serial(this, "COM4", 9600);
   boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);
   boxPort.buffer(10);
@@ -422,8 +421,6 @@ void setup(){
   
   //printPort = new Serial(this, "COM3", 19200);
  // printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);
- 
- */
   
 }
 
@@ -597,16 +594,14 @@ void transit1to2(){
     else {
       inStr = "";
       latestScan = new ItemTag();        //resets tagID before activity2
-      /* !!! Below commented out for Edward's PC to run without Arduinos connected
       boxPort.clear();
       bagPort.clear();
-      */
       rBut.changeTxt("DONE");
       state = "activity2";
     }
   }
 }
-    
+ 
 void activity2(){
   addText("Sort items into either the Flood Box or Emergency Bag. Remember to scan them!", txtEdge, txtLine/2, topTxtSz, "L", "C");
   addText("Stage 2/3", windWid-txtEdge, txtLine/2, stgeTxtSz, "R", "C");
@@ -620,8 +615,7 @@ void activity2(){
   for (int i = 0; i < crateItems.length; i++){
     if (crateItems[i].id.equals(latestScan.id) && (!crateItems[i].present || crateItems[i].container != latestScan.container)){  //checks key against item IDs, then their presence OR scan into diff container
       println("making present");
-      //int container = (int)random(1,3);
-      crateItems[i].scanned(latestScan.container);                         //parameter = container, atm randomly 1 or 2 (box or bag)
+      crateItems[i].scanned(latestScan.container);                  //parameter = container, atm randomly 1 or 2 (box or bag)
       itemsPresent++;
       for (int j = 0; j < crateItems.length; j++){
         if (j != i) crateItems[j].enlarged = false;                 //resets the enlargement of all but the clicked one
