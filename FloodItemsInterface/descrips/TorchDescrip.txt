@@ -1,3 +1,9 @@
-example example example
-test test test test test
-sample sample sample sample
+A torch is essential if there is 
+a power cut.
+
+Make sure you pack spare batteries 
+that fit the torch.
+A wind up torch is another alternative.
+
+Battery powered lanterns are good
+if the electricity is off for a while.

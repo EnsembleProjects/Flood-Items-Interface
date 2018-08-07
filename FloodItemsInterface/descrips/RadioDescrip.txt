@@ -1,2 +1,11 @@
-Radio:
-Text here   
+Lots of people expect to try to 
+use the Internet to get information 
+during a flood. 
+If the electricity supply fails 
+routers may not work and Internet 
+providers may be affected.
+
+If the local radio station is not 
+affected by flooding, it will be 
+a place to find local information 
+about what is happening and what to do.

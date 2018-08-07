@@ -1,2 +1,5 @@
-Medication:
-Text here   
+Pack prescription medication &
+repeat prescription forms. 
+
+Don't forget glasses, and 
+batteries for hearing aids.
