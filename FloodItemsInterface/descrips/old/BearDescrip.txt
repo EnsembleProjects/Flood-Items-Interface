@@ -1,6 +1,0 @@
-this is a test
-line 2 goes here
-more about bear
-example example example
-test test test test test
-sample sample sample sample
