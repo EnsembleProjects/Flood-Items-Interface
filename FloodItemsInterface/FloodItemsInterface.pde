@@ -336,9 +336,9 @@ String tagID = "";
 
 void setup()
 {
-  //fullScreen();                   // comment out to make the screen windowed
+  fullScreen();                   // comment out to make the screen windowed
   //size(1300, 700);                // OR comment out to make full screen
-  size(1280, 800);                // for 10" touchscreen (on Pi), was (1280,470)
+  //size(1280, 800);                // for 10" touchscreen (on Pi), was (1280,470)
   windowWidth = width;
   windowHeight = height;
 
@@ -354,7 +354,7 @@ void setup()
   yLargeItemGap = windowHeight/15;                      // large vertical gap between spaced items
   ySubTitleLine = yLine + ySmallItemGap;                // y co-ordinate for start of SubTitle below line drawn across screen
   fontSubTitleLine = fontTitleLine - 5;                 // font size for SubTitleLine
-  xSandbags = 3*windowWidth/10;                         // x co-ordinate for start of left-justified text on screen with sandbags image
+  xSandbags = windowWidth/4;                            // x co-ordinate for start of left-justified text on screen with sandbags image
   xThumbsUpWR = 2*windowWidth/5;                        // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
   xActivity1 = xTitleLine+windowWidth/30;               // x co-ordinate for start of user input in Activity1
   lineWidthActivity1 = (windowWidth - 4*xActivity1)/3;  // each input line is a third of screen width ignoring gaps at edges and between columns
@@ -476,7 +476,7 @@ void startScreen()
 int count = 0;
 void nameEntry()
 {
-  int lineY = yHeaderLine+4*fontTitleLine;
+  int lineY = yHeaderLine+3*fontTitleLine;
 
   if (showBackgroundImages)
   {
@@ -540,7 +540,7 @@ void activity1()
   addText("List at least 5 below", xTitleLine, lineY, fontSubTitleLine, LEFT, TOP);
   lineY += fontSubTitleLine + ySmallItemGap;
   addText("Press Enter to add the next item.  Press Backspace to edit the previous item.", xTitleLine, lineY, fontSubTitleLine-5, LEFT, TOP);
-  lineY += yLargeItemGap + yLargeItemGap/2;
+  lineY += 2*yLargeItemGap;
   startLineY = lineY;
   
   showSoftKeyboard(true);    // show keyboard with Enter key
@@ -666,8 +666,8 @@ void transit1to2()
   int xPos = xSandbags;
 
   addText("Great work" + (!PPname.equals("")? (", " + PPname):"") + "!", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += 2*fontSize;
   fontSize -=20;
+  yPos += 2*fontSize;
   image(floodBox, windowWidth-250, yPos);
   addText("The crate beside you holds items that", xPos, yPos, fontSize, LEFT, CENTER);
   yPos += fontSize;
