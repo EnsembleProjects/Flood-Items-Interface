@@ -35,8 +35,8 @@ int descripEdge = 10;     //the x and y distance from description label to the e
 int infoWidth;            //assigned in setup()
 int infoHeight;
 
-int dbutWidth = 120;      //the default button width, height, x, y, and colour
-int dbutHeight = 60;      // was 50
+int dbutWidth = 130;      //the default button width, height, x, y, and colour    was 120
+int dbutHeight = 70;      // was 50
 int dButX;                //assigned in setup()
 int dButY;
 int softKeyXstart;
@@ -87,7 +87,7 @@ public class Item
   public int x, y, container;
   public int rLine = 0;
   public PImage smallImg;
-  public PImage largelImg;
+  public PImage largeImg;
   public String[] descrip;
   public Button close;
   
@@ -102,9 +102,10 @@ public class Item
   {
     this.id = id;
     this.name = name;
-    this.largelImg = loadImage("graphics/" + name + ".png");
-    int laFactor = laWid/largelImg.width; 
-    this.largelImg.resize(laWid, largelImg.height*laFactor);
+    this.largeImg = loadImage("graphics/" + name + ".png");
+    int laFactor = laWid/largeImg.width;
+    int laHeight = largeImg.height*laFactor;        // scale image to fit width
+    this.largeImg.resize(laWid, laHeight);        // then draw it
     
     this.smallImg = loadImage("graphics/" + name + ".png");
     int smFactor = smWid/smallImg.width; 
@@ -151,7 +152,7 @@ public class Item
     {
       int imgX = 0;
       if (this.container == 2) imgX = xMid; //if in the bag, will draw on the back side
-      image(largelImg, imgX, yLine+fontScanBox-10);//change vertical position but be aware that moving up too far could overlap text
+      image(largeImg, imgX, yLine+fontScanBox-10);//change vertical position but be aware that moving up too far could overlap text
     }      
     else 
       image(smallImg, x, y);
@@ -305,7 +306,7 @@ public class Button
     if (mouseHoverOver()) fill(224, 164, 14);           // colour when mouse is hovering over
     else fill(255, 255, 255);                           // colour when mouse is not^
     //addText(txt, x+(wid/2)-2, y+(hei/2)-2, hei/2, CENTER, CENTER); // text is half height of button
-    addText(txt, x+(wid/2)-2, y+(2*hei/5), hei/2, CENTER, CENTER);   // text is half height of button
+    addText(txt, x+(wid/2)-2, y+(hei*3/7), hei*3/7, CENTER, CENTER);   // text is 3/7 height of button
     
     fill(255, 255, 255);                                // reset colour back to white
     stroke(67, 49, 167);
@@ -1154,7 +1155,7 @@ void loadSoftKeyboard()
   //int keyButWidth = windowWidth / (softKeyValue[0].length+4);
   int keyButWidth = windowWidth / (softKeyValue[0].length+3);
   int keyButHeight = keyButWidth * dbutHeight / dbutWidth;
-  int lineX = keyButWidth*3/2;
+  int lineX = keyButWidth;  //*3/2;
   int lineY = 9*windowHeight/14;
   keyBut = new Button[softKeyValue.length * softKeyValue[0].length];
   
