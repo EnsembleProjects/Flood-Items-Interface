@@ -46,6 +46,8 @@ color dBut = color(67, 49, 167); //this is temp - would prefer to use background
 char softKey = ' ';        // used by softKey handler to tell others if Enter/Backspace pressed
 boolean clickAct = false;  //ensures only 1 object reacts to a 'click'; true if a object has reacted to a click; resets on click release.
 boolean backAct = false;   //true if BACKSPACE pressed but inStr is empty
+int enlargedContainer = 0; // remembers which container currently displays an enlarged item (0 if neither), to
+                           //  ensure enlarge-clicks are ignored for the other container
 int mPressX = 0;           //stores the mouse co-ordinates at the point it was last clicked
 int mPressY = 0;
 
@@ -117,6 +119,7 @@ public class Item
   public void unenlarge()
   {
     enlarged = false;
+    enlargedContainer = 0;
     inStr = "";
   }
   
@@ -124,6 +127,7 @@ public class Item
   {
     present = true;
     this.container = c;
+    enlargedContainer = c;                          // remember which container has an enlarged item
     int minX, maxX;
     if (this.container == 1)
     {
@@ -140,8 +144,8 @@ public class Item
     {
       attempts++;
       this.x = int(random(minX, maxX));
-      this.y = int(random(yLine+fontScanBox, (windowHeight-smallImg.height-dbutHeight-10)));  //accounts for dButs as well
-                                                      // (don't let bottom of object go below top of buttons)
+      this.y = int(random(yLine+fontScanBox+10, (windowHeight-smallImg.height-dbutHeight-10)));  //accounts for dButs as well
+                                                    // (don't let bottom of object go below top of buttons)
     } while (detectCollision() && attempts < 500);  // if we haven't found a non-collision in all these attempts, just use this location
     if (attempts == 500) println("placing collided object due to lack of space");
   }
@@ -150,9 +154,12 @@ public class Item
   {
     if (enlarged)
     {
-      int imgX = 0;
-      if (this.container == 2) imgX = xMid; //if in the bag, will draw on the back side
-      image(largeImg, imgX, yLine+fontScanBox-10);//change vertical position but be aware that moving up too far could overlap text
+      int imgX = 0;                                 // items in Box are drawn on the left hand side
+      if (this.container == 2)
+        imgX = xMid;                                // items in Bag are drawn on the right hand side
+      fill(169, 190, 217, 150);                     // draw rectangle same shade as background but slightly transparent
+      rect(imgX, yLine, xMid, windowHeight-yLine);  //  so we can still see other scanned items in this container, but they're fainter
+      image(largeImg, imgX, yLine+fontScanBox); //-10);//change vertical position but be aware that moving up too far could overlap text
     }      
     else 
       image(smallImg, x, y);
@@ -161,34 +168,36 @@ public class Item
   public void enlarge()
   {
     enlarged = true;
+    enlargedContainer = this.container;
     drawImg();
     drawDescrip();
   }
   
   public void drawDescrip()
   {
-    int infoX;
+    int infoX = 0;
     int infoY = yLine+descripEdge;
-    if (this.container == 1) infoX = xMid + descripEdge;
-    else infoX = descripEdge;
-     
-     
-    fill(67, 49, 167); //change this light blue
-    rect(infoX, infoY, infoWidth, infoHeight);
+    if (this.container == 1)
+      infoX += xMid;
 
-    fill(224, 164, 14);  //yellow descipt txt
-    addText(this.name, infoX+5, infoY+5, fontItemName, LEFT, TOP);
-    for (int i = 0; i < descrip.length; i++)
+    fill(169, 190, 217);                            // draw rectangle same shade as background and obscuring items in this container
+    rect(infoX, yLine, xMid, windowHeight-yLine);
+
+    fill(80, 30, 120);                              // desciption txt
+    infoX += descripEdge;
+    addText(this.name, infoX+5, infoY+5, fontItemName, LEFT, TOP);    // display name of enlarged item
+    for (int i = 0; i < descrip.length; i++)        // display description of enlarged item
     {
       addText(descrip[i], infoX+5, infoY+fontItemName+10+(i*fontItemDesc), fontItemDesc, LEFT, TOP);
     }
+                                                    // display Close button (to unenlarge item)
     close = new Button("Close", infoX+infoWidth-dbutWidth-10, infoY+10, dbutWidth, dbutHeight, dBut);
     close.drawSelf();
   }
   
   public boolean clicked()
   {
-    if (!enlarged && mousePressedOver() && mousePressed && !clickAct)
+    if (!enlarged && mousePressedOver() && mousePressed && !clickAct && (enlargedContainer == 0 || enlargedContainer == this.container))
     {  //ensures mutex
       clickAct = true;
       return true;
@@ -337,9 +346,9 @@ String tagID = "";
 
 void setup()
 {
-  fullScreen();                   // comment out to make the screen windowed
+  //fullScreen();                   // comment out to make the screen windowed
   //size(1300, 700);                // OR comment out to make full screen
-  //size(1280, 800);                // for 10" touchscreen (on Pi), was (1280,470)
+  size(1280, 800);                // for 10" touchscreen (on Pi), was (1280,470)
   windowWidth = width;
   windowHeight = height;
 
@@ -366,7 +375,7 @@ void setup()
   fontItemDesc = fontItemName - 10;                     // font size for Description of enlarged scanned item
 
   infoWidth = (windowWidth/2) - (descripEdge*2);
-  infoHeight = windowHeight - (descripEdge*2) - yLine;
+  infoHeight = windowHeight - (descripEdge*2) - yLine - dbutHeight - 10;  // description fills other half of screen below Title line and above button
   
   //preload all the images, so they're ready for use when needed
   floodBox = loadImage("graphics/floodBox.gif");
@@ -418,29 +427,29 @@ void setup()
   
   // set up I/O ports by commenting out the lines you don't want
   //boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
-  //*/boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows
+  boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows //*/
   //boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);        // these lines are for use on Mac
   //boxPort = new Serial(this, "/dev/tty.usbmodem14231", 9600);
-  //*/boxPort.buffer(10);
-  //*/boxPort.clear();
+  boxPort.buffer(10); //*/
+  boxPort.clear(); //*/
   
   //bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
-  //*/bagPort = new Serial(this, "COM4", 9600);                            // Windows
+  bagPort = new Serial(this, "COM4", 9600);                            // Windows //*/
   //bagPort = new Serial(this, "/dev/tty.usbmodem1A1221", 9600);         // Mac
   //bagPort = new Serial(this, "/dev/tty.usbmodem14211", 9600);
-  //*/bagPort.buffer(10);
-  //*/bagPort.clear();
+  bagPort.buffer(10); //*/
+  bagPort.clear(); //*/
   
   //printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
-  //*/printPort = new Serial(this, "COM6", 19200);                         // Windows
+  printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 }
 
 void initialiseData()
 {
   PPname = "";                          // clear the participant's name
-  //*/boxPort.clear();                  // reset the serial input ports
-  //*/bagPort.clear();
+  boxPort.clear();                  // reset the serial input ports //*/
+  bagPort.clear(); //*/
   // clear the items entered by the participant
   a1Item = a1Items.length;
   while (a1Item > 0)
@@ -461,10 +470,19 @@ void initialiseData()
     //crateItems[i].container = 0;      // item not in a container (for testing, set to 1)
     // for test purposes, pretend item has been scanned into Box
     crateItems[i].present = true;       // item scanned
-    crateItems[i].container = 1;        // item in Box container
-    crateItems[i].scanned(1);           // place item randomly on screen
+    if (i < 11 || i > 13)                        // torch
+    {
+      crateItems[i].container = 1;        // item in Box container
+      crateItems[i].scanned(1);           // place item randomly on screen
+    }
+    else
+    {
+      crateItems[i].container = 2;        // item in Bag container
+      crateItems[i].scanned(2);           // place item randomly on screen
+    }
     itemsPresent++;                     // count number of items present
   }
+  enlargedContainer = 0;
 }
 
 void startScreen()
@@ -601,10 +619,10 @@ void activity1()
     addText("Press Enter to continue adding", xPromptActivity1, lineY+(4*yLargeItemGap), fontSubTitleLine-5, LEFT, BOTTOM);
   }
 
-  fill(255, 0, 0);            // set coloour for user input
+  fill(255, 0, 0);            // set colour for user input
   for (int i = 0; i < 5; i++)
   {
-    line(lineX, lineY+(i*yLargeItemGap), lineX+lineWidthActivity1, lineY+(i*yLargeItemGap)); //display underline for first 5 items
+    //line(lineX, lineY+(i*yLargeItemGap), lineX+lineWidthActivity1, lineY+(i*yLargeItemGap)); //display underline for first 5 items
     addText(str(i+1) + ".", lineX-fontLineActivity1-5, lineY+(i*yLargeItemGap), fontLineActivity1, LEFT, BOTTOM);  // display index number for first 5 items
   }
   for (int i = 0; i < a1Items.length; i++)
@@ -622,7 +640,7 @@ void activity1()
         lineY = startLineY - (5*yLargeItemGap);
         lineX = xMid - lineWidthActivity1/2;
       }
-      line(lineX, lineY+(i*yLargeItemGap), lineX+lineWidthActivity1, lineY+(i*yLargeItemGap));  // display underline for next item
+      //line(lineX, lineY+(i*yLargeItemGap), lineX+lineWidthActivity1, lineY+(i*yLargeItemGap));  // display underline for next item
       int numWidth = ((i < 9)? fontLineActivity1+5:5*fontLineActivity1/3);      // adjust position so index number is displayed right-aligned to user input
       addText(str(i+1) + ".", lineX-numWidth, lineY+(i*yLargeItemGap), fontLineActivity1, LEFT, BOTTOM);  // display index number for next item
     }
@@ -703,8 +721,8 @@ void transit1to2()
   {
     inStr = "";
     latestScan = new ItemTag();        //resets tagID before activity2
-    //*/boxPort.clear();
-    //*/bagPort.clear();
+    boxPort.clear(); //*/
+    bagPort.clear(); //*/
     state = State.ACTIVITY2;
   }
 }
@@ -731,13 +749,14 @@ void activity2()
     if (crateItems[i].id.equals(latestScan.id) && (!crateItems[i].present || crateItems[i].container != latestScan.container))
     {  //checks key against item IDs, then their presence OR scan into diff container
       //println("making present");
-      crateItems[i].scanned(latestScan.container);                  //parameter = container, atm randomly 1 or 2 (box or bag)
+      crateItems[i].scanned(latestScan.container);                  //parameter = container
       itemsPresent++;
       for (int j = 0; j < crateItems.length; j++)
       {
         if (j != i) crateItems[j].enlarged = false;                 //resets the enlargement of all but the clicked one
       }
       crateItems[i].enlarge();
+      //println("enlarge item " + i);
       break;
     }
   }   
@@ -753,18 +772,21 @@ void activity2()
           if (j != i) crateItems[j].enlarged = false; //resets the enlargement of all but the clicked one
         }
         crateItems[i].enlarge();
+        //println("enlarge item " + i);
       }
       else if (crateItems[i].enlarged && crateItems[i].close.clicked())
       {
         crateItems[i].unenlarge();
+        //println("unenlarge item " + i);
       }
       crateItems[i].drawImg();
     }
   }
   for (int i = 0; i < crateItems.length; i++)
-    if (crateItems[i].enlarged) crateItems[i].enlarge();  //done after for drawing layer purposes
+    if (crateItems[i].enlarged) 
+      crateItems[i].enlarge();  //done after for drawing layer purposes
   
-  if (lBut.clicked())
+  if (lBut.clicked() && (enlargedContainer == 0))
   {
     for (int i = 0; i < crateItems.length; i++) 
       crateItems[i].enlarged = false; //resets the enlargement of all
@@ -779,7 +801,7 @@ void activity2()
     rBut.changeTxt("Next");
     state = State.ACTIVITY1;
   }  
-  if (rBut.clicked()) //*/ && itemsPresent > 0)
+  if (rBut.clicked() && (enlargedContainer == 0) && itemsPresent > 0) //*/
   {
     for (int i = 0; i < crateItems.length; i++) 
       crateItems[i].enlarged = false; //resets the enlargement of all
@@ -1113,7 +1135,7 @@ void serialEvent(Serial port)
 void printTxt(String[] txt)
 {
   for (int line = 0; line < txt.length; line++)
-    ;//*/printPort.write(txt[line]);
+    printPort.write(txt[line]);  //*/
 }
   
 //following variables used exclusively in alternator() method, but need to be global
