@@ -3,44 +3,48 @@ import processing.serial.*;
 
 boolean showBackgroundImages = true;  // set false if you want a plain background rather than background images
 
-int numItems = 23;        //change to show number of items included
+int numItems = 23;         // number of items included in crate that can be scanned
 
-int windowWidth;          //assigned in setup()
+int windowWidth;           // assigned in setup()
 int windowHeight;
-int xMid;                 // x co-ordinate of middle of window
-int yLine;                // y co-ordinate for Line across screen
-int xTitleLine;           // x co-ordinate of start of Title drawn above Line across screen (for list headers)
-int yTitleLine;           // y co-ordinate of start of TitleLine
-int fontTitleLine;        // font size for TitleLine
-int ySubTitleLine;        // y co-ordinate for start of subTitle below line drawn across screen
-int fontSubTitleLine;     // font size for SubTitleLine
-int ySmallItemGap;        // small vertical gap between spaced items
-int yLargeItemGap;        // large vertical gap between spaced items
-int yHeaderLine;          // y co-ordinate for screens with large centred headings
-int fontHeaderLine;       // font size for centred headings
-int xSandbags;            // x co-ordinate for start of left-justified text on screen with sandbags image
-int xThumbsUpWR;          // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
-int xActivity1;           // x co-ordinate for start of user input in Activity1
-int lineWidthActivity1;   // width of user input line for Activity1
-int fontLineActivity1;    // font size for user input for Activity1
-int xPromptActivity1;     // x co-ordinate for extra prompts for Activity1
-int fontScanBox;          // font size for Box/Discard(Bag) titles on scanning screen
-int fontItemName;         // font size for Name of enlarged scanned item
-int fontItemDesc;         // font size for Description of enlarged scanned item
-int strokeWeight = 3;     //default stroke weight
+int xMid;                  // x co-ordinate of middle of window
+int yLine;                 // y co-ordinate for Line across screen
+int xTitleLine;            // x co-ordinate of start of Title drawn above Line across screen (for list headers)
+int yTitleLine;            // y co-ordinate of start of TitleLine
+int fontTitleLine;         // font size for TitleLine
+int ySubTitleLine;         // y co-ordinate for start of subTitle below line drawn across screen
+int fontSubTitleLine;      // font size for SubTitleLine
+int ySmallItemGap;         // small vertical gap between spaced items
+int yLargeItemGap;         // large vertical gap between spaced items
+int yHeaderLine;           // y co-ordinate for screens with large centred headings
+int fontHeaderLine;        // font size for centred headings
+int xSandbags;             // x co-ordinate for start of left-justified text on screen with sandbags image
+int xThumbsUpWR;           // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
+int xActivity1;            // x co-ordinate for start of user input in Activity1
+int lineWidthActivity1;    // width of user input line for Activity1
+int fontLineActivity1;     // font size for user input for Activity1
+int xPromptActivity1;      // x co-ordinate for extra prompts for Activity1
+int fontScanBox;           // font size for Box/Discard(Bag) titles on scanning screen
+int fontItemName;          // font size for Name of enlarged scanned item
+int fontItemDesc;          // font size for Description of enlarged scanned item
 
-int inputLineGap = 5;     //the distance (or buffer) between the flashing vertical line (cursor) and any text that is input
-int descripEdge = 10;     //the x and y distance from description label to the edge of the container-area
+int strokeWeight = 3;      //default stroke weight
 
-int infoWidth;            //assigned in setup()
+int inputLineGap = 5;      //the distance (or buffer) between the flashing vertical line (cursor) and any text that is input
+int descripEdge = 10;      //the x and y distance from description label to the edge of the container-area
+
+int infoWidth;             //assigned in setup()
 int infoHeight;
 
-int dbutWidth = 130;      //the default button width, height, x, y, and colour    was 120
-int dbutHeight = 70;      // was 50
-int dButX;                //assigned in setup()
+int dbutWidth = 120;       //the default button width, height, x, y, and colour    was 120
+int dbutHeight = 65;       // was 50
+int dButX;                 //assigned in setup()
 int dButY;
-int softKeyXstart;
-int softKeyYstart;
+
+int keyLineGap;            // gap between each line of the soft keyboard
+int keyboardGap;           // gap at each side of the soft keyboard
+int keyboardLine;          // start line for soft keyboard
+
 color dBut = color(67, 49, 167); //this is temp - would prefer to use background image
 
 char softKey = ' ';        // used by softKey handler to tell others if Enter/Backspace pressed
@@ -373,9 +377,13 @@ void setup()
   fontScanBox = windowHeight/20;                        // font size for Box/Discard(Bag) titles on scanning screen 
   fontItemName = fontTitleLine;                         // font size for Name of enlarged scanned item
   fontItemDesc = fontItemName - 10;                     // font size for Description of enlarged scanned item
-
-  infoWidth = (windowWidth/2) - (descripEdge*2);
+  infoWidth = (windowWidth/2) - (descripEdge*2);        // width of enlarged item description
   infoHeight = windowHeight - (descripEdge*2) - yLine - dbutHeight - 10;  // description fills other half of screen below Title line and above button
+
+  keyLineGap = windowHeight/200;                       // gap between each line of the soft keyboard
+  keyboardGap = windowWidth/14;                        // gap at each side of the soft keyboard
+  keyboardLine = 9*windowHeight/14;                    // start line for soft keyboard
+
   
   //preload all the images, so they're ready for use when needed
   floodBox = loadImage("graphics/floodBox.gif");
@@ -427,29 +435,29 @@ void setup()
   
   // set up I/O ports by commenting out the lines you don't want
   //boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
-  boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows //*/
+  //*/boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows //*/
   //boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);        // these lines are for use on Mac
   //boxPort = new Serial(this, "/dev/tty.usbmodem14231", 9600);
-  boxPort.buffer(10); //*/
-  boxPort.clear(); //*/
+  //*/boxPort.buffer(10); //*/
+  //*/boxPort.clear(); //*/
   
   //bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
-  bagPort = new Serial(this, "COM4", 9600);                            // Windows //*/
+  //*/bagPort = new Serial(this, "COM4", 9600);                            // Windows //*/
   //bagPort = new Serial(this, "/dev/tty.usbmodem1A1221", 9600);         // Mac
   //bagPort = new Serial(this, "/dev/tty.usbmodem14211", 9600);
-  bagPort.buffer(10); //*/
-  bagPort.clear(); //*/
+  //*/bagPort.buffer(10); //*/
+  //*/bagPort.clear(); //*/
   
   //printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
-  printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
+  //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 }
 
 void initialiseData()
 {
   PPname = "";                          // clear the participant's name
-  boxPort.clear();                  // reset the serial input ports //*/
-  bagPort.clear(); //*/
+  //*/boxPort.clear();                  // reset the serial input ports //*/
+  //*/bagPort.clear(); //*/
   // clear the items entered by the participant
   a1Item = a1Items.length;
   while (a1Item > 0)
@@ -721,8 +729,8 @@ void transit1to2()
   {
     inStr = "";
     latestScan = new ItemTag();        //resets tagID before activity2
-    boxPort.clear(); //*/
-    bagPort.clear(); //*/
+    //*/boxPort.clear(); //*/
+    //*/bagPort.clear(); //*/
     state = State.ACTIVITY2;
   }
 }
@@ -1135,7 +1143,7 @@ void serialEvent(Serial port)
 void printTxt(String[] txt)
 {
   for (int line = 0; line < txt.length; line++)
-    printPort.write(txt[line]);  //*/
+    ;//*/printPort.write(txt[line]);  //*/
 }
   
 //following variables used exclusively in alternator() method, but need to be global
@@ -1173,12 +1181,10 @@ void keyPressed()
 void loadSoftKeyboard()
 {
   // set button size and position to scale with screen size
-  int lineGap = windowHeight/200;
-  //int keyButWidth = windowWidth / (softKeyValue[0].length+4);
-  int keyButWidth = windowWidth / (softKeyValue[0].length+3);
+  int keyButWidth = (windowWidth - 2*keyboardGap) / (softKeyValue[0].length);  // leave gap at each side of keyboard
   int keyButHeight = keyButWidth * dbutHeight / dbutWidth;
-  int lineX = keyButWidth;  //*3/2;
-  int lineY = 9*windowHeight/14;
+  int lineX = keyboardGap;                                     // calculate start xPosition of keyboard;
+  int lineY = keyboardLine;
   keyBut = new Button[softKeyValue.length * softKeyValue[0].length];
   
   for (int row = 0, i = 0; row < softKeyValue.length; row++, i++)
@@ -1195,7 +1201,7 @@ void loadSoftKeyboard()
         keyBut[i] = new Button(softKeyValue[row][col], lineX+(keyButWidth*col), lineY, keyButWidth, keyButHeight, dBut);
     }
     lineX += keyButWidth/2;
-    lineY += keyButHeight + lineGap;
+    lineY += keyButHeight + keyLineGap;
   }
 }
 
