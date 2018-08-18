@@ -719,7 +719,7 @@ void transit1to2()
   yPos += fontSize;
   addText("containing things you'll need", xPos, yPos, fontSize, LEFT, CENTER);
   yPos += fontSize;
-  addText("to survive during a flood", xPos, yPos, fontSize, LEFT, CENTER);
+  addText("to be prepared for a flood", xPos, yPos, fontSize, LEFT, CENTER);
   rBut.drawSelf();
   lBut.drawSelf();
   if (lBut.clicked())
@@ -817,7 +817,7 @@ void activity2()
       a1Item = 0;
     }
     rBut.changeTxt("Next");
-    state = State.ACTIVITY1;
+    state = State.TRANSIT1TO2; //State.ACTIVITY1;
   }  
   if (rBut.clicked() && (enlargedContainer == 0) && itemsPresent > 0) //*/
   {
