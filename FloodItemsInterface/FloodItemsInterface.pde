@@ -27,6 +27,10 @@ int xPromptActivity1;      // x co-ordinate for extra prompts for Activity1
 int fontScanBox;           // font size for Box/Discard(Bag) titles on scanning screen
 int fontItemName;          // font size for Name of enlarged scanned item
 int fontItemDesc;          // font size for Description of enlarged scanned item
+int smallImageWidth;       // width of scanned item image 
+int largeImageWidth;       // max width of enlarged scanned item image
+int largeImageHeight;      // max height of enlarged scanned item image
+
 
 int strokeWeight = 3;      //default stroke weight
 
@@ -73,7 +77,6 @@ String[] a1Items = {};     //items the PP comes up with during activity 1
 int a1Item = 0;            //item within a1Items[] PP is currently addressing
 String inStr = "";         //temp storage for input string (i.e. acts as input buffer)
 int itemsPresent = 0;      //number of items scanned in and on screen
-int slideNum = 1;          //slide number for transition periods between activities (reset at the beginning of each)
 
 // used internally to ease generation of final report
 String[] boxItems = {};    //items scanned into Box
@@ -101,21 +104,21 @@ public class Item
   public boolean held = false;
   public boolean enlarged = false;
   
-  public int smWid = 100; 
-  public int laWid = 500;
-  
   public Item(String id, String name)
   {
     this.id = id;
     this.name = name;
     this.largeImg = loadImage("graphics/" + name + ".png");
-    int laFactor = laWid/largeImg.width;
-    int laHeight = largeImg.height*laFactor;        // scale image to fit width
-    this.largeImg.resize(laWid, laHeight);        // then draw it
+    float laFactor = (float)largeImageWidth/largeImg.width;
+    int laHeight = (int)(laFactor * largeImg.height);         // scale image to fit width
+    if (laHeight <= largeImageHeight)                         //  and also to fit height
+      this.largeImg.resize(largeImageWidth, laHeight);        // then draw it
+    else
+      this.largeImg.resize((int)((float)largeImageWidth*(largeImageHeight)/laHeight), largeImageHeight);
     
     this.smallImg = loadImage("graphics/" + name + ".png");
-    int smFactor = smWid/smallImg.width; 
-    this.smallImg.resize(smWid, smallImg.height*smFactor);
+    int smFactor = smallImageWidth/smallImg.width; 
+    this.smallImg.resize(smallImageWidth, smallImg.height*smFactor);
     
     this.descrip = loadStrings("descrips/" + name + "Descrip.txt");
   }
@@ -163,6 +166,8 @@ public class Item
         imgX = xMid;                                // items in Bag are drawn on the right hand side
       fill(169, 190, 217, 150);                     // draw rectangle same shade as background but slightly transparent
       rect(imgX, yLine, xMid, windowHeight-yLine);  //  so we can still see other scanned items in this container, but they're fainter
+      if (largeImg.width < xMid)
+        imgX += (xMid - largeImg.width) / 2;        // display image horizontally central
       image(largeImg, imgX, yLine+fontScanBox); //-10);//change vertical position but be aware that moving up too far could overlap text
     }      
     else 
@@ -380,9 +385,13 @@ void setup()
   infoWidth = (windowWidth/2) - (descripEdge*2);        // width of enlarged item description
   infoHeight = windowHeight - (descripEdge*2) - yLine - dbutHeight - 10;  // description fills other half of screen below Title line and above button
 
-  keyLineGap = windowHeight/200;                       // gap between each line of the soft keyboard
-  keyboardGap = windowWidth/14;                        // gap at each side of the soft keyboard
-  keyboardLine = 9*windowHeight/14;                    // start line for soft keyboard
+  smallImageWidth = 100;                                // width of scanned item image 
+  largeImageWidth = 500;                                // max width of scanned item image when enlarged
+  largeImageHeight = infoHeight - 20;                   // max height of scanned item image when enlarged
+
+  keyLineGap = windowHeight/200;                        // gap between each line of the soft keyboard
+  keyboardGap = windowWidth/14;                         // gap at each side of the soft keyboard
+  keyboardLine = 9*windowHeight/14;                     // start line for soft keyboard
 
   
   //preload all the images, so they're ready for use when needed
@@ -468,27 +477,28 @@ void initialiseData()
   }
   inStr = "";
   itemsPresent = 0;                     // no items scanned yet
-  slideNum = 1;
   // clear the items from the Flood Box, the Flood Bag, and the Report (first two are used by the report)
   clearReport();
   // mark all crate items as not scanned and not in the Box/Bag
   for (int i = 0; i < crateItems.length; i++)
   {
-    //crateItems[i].present = false;    // item not scanned (for testing, set to true)
-    //crateItems[i].container = 0;      // item not in a container (for testing, set to 1)
+    crateItems[i].present = false;    // item not scanned (for testing, set to true)
+    crateItems[i].container = 0;      // item not in a container (for testing, set to 1)
     // for test purposes, pretend item has been scanned into Box
-    crateItems[i].present = true;       // item scanned
-    if (i < 11 || i > 13)                        // torch
+    if (i < 11 || i > 13)
     {
+      crateItems[i].present = true;       // item scanned
       crateItems[i].container = 1;        // item in Box container
       crateItems[i].scanned(1);           // place item randomly on screen
+      itemsPresent++;                     // count number of items present
     }
     else
     {
+      crateItems[i].present = true;       // item scanned
       crateItems[i].container = 2;        // item in Bag container
       crateItems[i].scanned(2);           // place item randomly on screen
+      itemsPresent++;                     // count number of items present
     }
-    itemsPresent++;                     // count number of items present
   }
   enlargedContainer = 0;
 }
@@ -919,16 +929,16 @@ void report()
   {
     //println("SaveClick");
     int fNum = 1;
-    println(sketchPath("reports/report" + str(fNum) + ".txt"));
+    //println(sketchPath("reports/report" + str(fNum) + ".txt"));
     File f = new File(sketchPath("reports/report" + str(fNum) + ".txt"));
-    println(f.getName() + " : " + f.exists());
+    //println(f.getName() + " : " + f.exists());
     while (f.exists())
     {
       //println(fNum + " exists");
       fNum++;
       f = new File(sketchPath("reports/report" + str(fNum) + ".txt"));
     }
-    println("saving as " + fNum);
+    //println("saving as report" + fNum + ".txt");
     saveStrings(sketchPath("reports/report" + str(fNum) + ".txt"), report);
     printTxt(report);
     state = State.FINISHED;
