@@ -1,88 +1,100 @@
 import java.util.Map;
 import processing.serial.*;
 
-boolean showBackgroundImages = true;  // set false if you want a plain background rather than background images
+boolean showBackgroundImages = true;              // set false if you want a plain background rather than background images
 
-int numItems = 23;         // number of items included in crate that can be scanned
+int numItems = 23;                                             // number of items included in crate that can be scanned
 
-int windowWidth;           // assigned in setup()
+int windowWidth;                                               // assigned in setup()
 int windowHeight;
-int xMid;                  // x co-ordinate of middle of window
-int yLine;                 // y co-ordinate for Line across screen
-int xTitleLine;            // x co-ordinate of start of Title drawn above Line across screen (for list headers)
-int yTitleLine;            // y co-ordinate of start of TitleLine
-int fontTitleLine;         // font size for TitleLine
-int ySubTitleLine;         // y co-ordinate for start of subTitle below line drawn across screen
-int fontSubTitleLine;      // font size for SubTitleLine
-int ySmallItemGap;         // small vertical gap between spaced items
-int yLargeItemGap;         // large vertical gap between spaced items
-int yHeaderLine;           // y co-ordinate for screens with large centred headings
-int fontHeaderLine;        // font size for centred headings
-int xSandbags;             // x co-ordinate for start of left-justified text on screen with sandbags image
-int xThumbsUpWR;           // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
-int xActivity1;            // x co-ordinate for start of user input in Activity1
-int lineWidthActivity1;    // width of user input line for Activity1
-int fontLineActivity1;     // font size for user input for Activity1
-int xPromptActivity1;      // x co-ordinate for extra prompts for Activity1
-int fontScanBox;           // font size for Box/Discard(Bag) titles on scanning screen
-int fontItemName;          // font size for Name of enlarged scanned item
-int fontItemDesc;          // font size for Description of enlarged scanned item
-int smallImageWidth;       // width of scanned item image 
-int largeImageWidth;       // max width of enlarged scanned item image
-int largeImageHeight;      // max height of enlarged scanned item image
+int xMid;                                                      // x co-ordinate of middle of window
+int yLine;                                                     // y co-ordinate for Line across screen below title
+int xTitleLine;                                                // x co-ordinate of start of Title drawn above Line across screen (for list headers)
+int yTitleLine;                                                // y co-ordinate of TitleLine
+int fontSizeTitle;                                             // font size for TitleLine
+int ySubTitleLine;                                             // y co-ordinate for start of subTitle below line drawn across screen
+int fontSizeSubTitle;                                          // font size for SubTitleLine
+int fontSizeText;                                              // font size for Text below titles
+int ySmallItemGap;                                             // small vertical gap between spaced items
+int yLargeItemGap;                                             // large vertical gap between spaced items
+int yHeaderLine;                                               // y co-ordinate for screens with large centred headings
+int fontSizeHeader;                                            // font size for centred headings
+int xSandbags;                                                 // x co-ordinate for start of left-justified text on screen with sandbags image
+int xThumbsUpWR;                                               // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
+int xCouchCat;                                                 // x co-ordinate for start of left-justified text on screen with couchcat image
+int xActivity1;                                                // x co-ordinate for start of user input in Activity1
+int lineWidthActivity1;                                        // width of user input line for Activity1
+int fontSizeInputActivity1;                                    // font size for user input for Activity1
+int xPromptActivity1;                                          // x co-ordinate for extra prompts for Activity1
+int fontSizeScanBox;                                           // font size for Box/Discard(Bag) titles on scanning screen
+int fontSizeItemName;                                          // font size for Name of enlarged scanned item
+int fontSizeItemDesc;                                          // font size for Description of enlarged scanned item
+int smallImageWidth;                                           // width of scanned item image 
+int largeImageWidth;                                           // max width of enlarged scanned item image
+int largeImageHeight;                                          // max height of enlarged scanned item image
 
+int strokeWeight = 1;                                          // default stroke weight (used for lines)
 
-int strokeWeight = 3;      //default stroke weight
+int inputLineGap = 5;                                          // the distance (or buffer) between the flashing vertical line (cursor) and user input text
+int descripEdge = 10;                                          // border between description text and edge of container-area
 
-int inputLineGap = 5;      //the distance (or buffer) between the flashing vertical line (cursor) and any text that is input
-int descripEdge = 10;      //the x and y distance from description label to the edge of the container-area
-
-int infoWidth;             //assigned in setup()
+int infoWidth;                                                 // width of text in Box/Bag container area - assigned in setup()
 int infoHeight;
 
-int dbutWidth = 120;       //the default button width, height, x, y, and colour    was 120
-int dbutHeight = 65;       // was 50
-int dButX;                 //assigned in setup()
+int dbutWidth = 120;                                           // default button width (used for Next/Done/Restart, Back, and Close buttons)
+int dbutHeight = 50;                                           // default button height
+int dButX;                                                     // button position, assigned in setup()
 int dButY;
 
-int keyLineGap;            // gap between each line of the soft keyboard
-int keyboardGap;           // gap at each side of the soft keyboard
-int keyboardLine;          // start line for soft keyboard
+int keyLineGap;                                                // gap between each line (row) of the soft keyboard
+int keyboardGap;                                               // gap at each side of the soft keyboard
+int keyboardLine;                                              // start line for soft keyboard
+int dKeyWidth = 120;                                           // default soft key width
+int dKeyHeight = 65;                                           // default soft key height
 
-color dBut = color(67, 49, 167); //this is temp - would prefer to use background image
+color dBut = color(255,255,255,150);                           // white, semi-transparent
+color backgroundColour = color(249, 244, 241);                 // 'pinkish' background colour
+color backgroundTransparent = color(249, 244, 241, 150);       // semi-transparent background colour
+color textColour = color(33, 33, 33);                          // graphite colour of text
+color highlightColour = color(246, 79, 90);                    // cerise colour of highlighted text, or user input field
 
-char softKey = ' ';        // used by softKey handler to tell others if Enter/Backspace pressed
-boolean clickAct = false;  //ensures only 1 object reacts to a 'click'; true if a object has reacted to a click; resets on click release.
-boolean backAct = false;   //true if BACKSPACE pressed but inStr is empty
-int enlargedContainer = 0; // remembers which container currently displays an enlarged item (0 if neither), to
-                           //  ensure enlarge-clicks are ignored for the other container
-int mPressX = 0;           //stores the mouse co-ordinates at the point it was last clicked
+char softKey = ' ';                                            // used by softKey handler to tell others if Enter/Backspace pressed
+boolean clickAct = false;                                      //ensures only 1 object reacts to a 'click'; true if a object has reacted to a click; resets on click release.
+boolean backAct = false;                                       // true if BACKSPACE pressed but inStr is empty (used to backspace to previous input line)
+int enlargedContainer = 0;                                     // remembers which container currently displays an enlarged item (0 if neither), to
+                                                               //  ensure enlarge-clicks are ignored for the other container
+int mPressX = 0;                                               // stores the mouse co-ordinates at the point it was last clicked
 int mPressY = 0;
 
 enum State {STARTSCREEN, NAMEENTRY, ACTIVITY1, TRANSIT1TO2, ACTIVITY2, REPORT, FINISHED};
 
-State state = State.STARTSCREEN;  //used for switch statement
+State state = State.STARTSCREEN;                               // state machine powers up in STARTSCREEN state
 
 PImage floodBox;
 PImage welcome;
+PImage couchcat;
 PImage boots;
 PImage sandbags;
 PImage thumbsupwithoutrescue;
 //PImage emergBag;
+PImage LULogo;
+PImage EnsembleLogo;
+PImage EnvAgencyLogo;
 
-PFont font;
-String PPname = "";        //name of the participant (PP), taken in nameEntry screen
-int maxNameLength = 20;    //maximum length of participant's name
-String[] a1Items = {};     //items the PP comes up with during activity 1
-int a1Item = 0;            //item within a1Items[] PP is currently addressing
-String inStr = "";         //temp storage for input string (i.e. acts as input buffer)
-int itemsPresent = 0;      //number of items scanned in and on screen
+PFont fontTitle, fontText;                                     // fonts for Titles, and the rest of the text
+String PPname = "";                                            // name of the participant (PP), taken in nameEntry screen
+int maxNameLength = 20;                                        // maximum length of participant's name
+String[] a1Items = {};                                         // items the PP enters during activity 1
+int a1Item = 0;                                                // item within a1Items[] that PP is currently addressing
+String inStr = "";                                             // temp storage for input string (i.e. acts as input buffer)
+int itemsPresent = 0;                                          // number of items scanned in (and on screen)
 
 // used internally to ease generation of final report
-String[] boxItems = {};    //items scanned into Box
-String[] bagItems = {};    //items scanned into Bag
-String[] report = {};      //text to be sent to printer
+String[] boxItems = {};                                        // items scanned into Box
+String[] bagItems = {};                                        // items scanned into Bag
+String[] report = {};                                          // text to be sent to printer
 
+// class, with attributes and methods, for each scannable item
 public class ItemTag
 {
   public String id;
@@ -94,14 +106,14 @@ public class Item
   public String id;
   public String name;
   public int x, y, container;
-  public int rLine = 0;
+  //public int rLine = 0;
   public PImage smallImg;
   public PImage largeImg;
   public String[] descrip;
   public Button close;
   
   public boolean present = false;
-  public boolean held = false;
+  //public boolean held = false;
   public boolean enlarged = false;
   
   public Item(String id, String name)
@@ -110,9 +122,9 @@ public class Item
     this.name = name;
     this.largeImg = loadImage("graphics/" + name + ".png");
     float laFactor = (float)largeImageWidth/largeImg.width;
-    int laHeight = (int)(laFactor * largeImg.height);         // scale image to fit width
-    if (laHeight <= largeImageHeight)                         //  and also to fit height
-      this.largeImg.resize(largeImageWidth, laHeight);        // then draw it
+    int laHeight = (int)(laFactor * largeImg.height);          // scale image to fit width
+    if (laHeight <= largeImageHeight)                          //  and also to fit height
+      this.largeImg.resize(largeImageWidth, laHeight);         // then draw it
     else
       this.largeImg.resize((int)((float)largeImageWidth*(largeImageHeight)/laHeight), largeImageHeight);
     
@@ -134,7 +146,7 @@ public class Item
   {
     present = true;
     this.container = c;
-    enlargedContainer = c;                          // remember which container has an enlarged item
+    enlargedContainer = c;                                     // remember which container has an enlarged item
     int minX, maxX;
     if (this.container == 1)
     {
@@ -146,14 +158,14 @@ public class Item
       minX = xMid;
       maxX = windowWidth - smallImg.width;
     }
-    double attempts = 0;      // count number of attempts to find non-colliding location
+    double attempts = 0;                                       // count number of attempts to find non-colliding location
     do
     {
       attempts++;
       this.x = int(random(minX, maxX));
-      this.y = int(random(yLine+fontScanBox+10, (windowHeight-smallImg.height-dbutHeight-10)));  //accounts for dButs as well
-                                                    // (don't let bottom of object go below top of buttons)
-    } while (detectCollision() && attempts < 500);  // if we haven't found a non-collision in all these attempts, just use this location
+      this.y = int(random(yLine+fontSizeScanBox+10, (windowHeight-smallImg.height-dbutHeight-10)));  //accounts for dButs as well
+                                                               // (don't let bottom of object go below top of buttons)
+    } while (detectCollision() && attempts < 500);             // if we haven't found a non-collision in all these attempts, just use this location
     if (attempts == 500) println("placing collided object due to lack of space");
   }
   
@@ -161,14 +173,15 @@ public class Item
   {
     if (enlarged)
     {
-      int imgX = 0;                                 // items in Box are drawn on the left hand side
+      int imgX = 0;                                            // items in Box are drawn on the left hand side
       if (this.container == 2)
-        imgX = xMid;                                // items in Bag are drawn on the right hand side
-      fill(169, 190, 217, 150);                     // draw rectangle same shade as background but slightly transparent
-      rect(imgX, yLine, xMid, windowHeight-yLine);  //  so we can still see other scanned items in this container, but they're fainter
+        imgX = xMid;                                           // items in Bag are drawn on the right hand side
+      fill(backgroundTransparent);                             // draw rectangle same shade as background but slightly transparent
+      noStroke();
+      rect(imgX+strokeWeight, yLine+strokeWeight, xMid-2*strokeWeight, windowHeight-yLine-2*strokeWeight);  //  so we can still see other scanned items in this container, but they're fainter
       if (largeImg.width < xMid)
-        imgX += (xMid - largeImg.width) / 2;        // display image horizontally central
-      image(largeImg, imgX, yLine+fontScanBox); //-10);//change vertical position but be aware that moving up too far could overlap text
+        imgX += (xMid - largeImg.width) / 2;                   // display image horizontally central
+      image(largeImg, imgX, yLine+fontSizeScanBox); //-10);    //change vertical position but be aware that moving up too far could overlap text
     }      
     else 
       image(smallImg, x, y);
@@ -180,6 +193,7 @@ public class Item
     enlargedContainer = this.container;
     drawImg();
     drawDescrip();
+    strokeWeight(strokeWeight);
   }
   
   public void drawDescrip()
@@ -189,23 +203,26 @@ public class Item
     if (this.container == 1)
       infoX += xMid;
 
-    fill(169, 190, 217);                            // draw rectangle same shade as background and obscuring items in this container
-    rect(infoX, yLine, xMid, windowHeight-yLine);
+    fill(backgroundColour);                                    // draw rectangle same shade as background and obscuring items in this container
+    noStroke();                                                // rectangle has no lines around it
+    rect(infoX+strokeWeight, yLine+strokeWeight, xMid-2*strokeWeight, windowHeight-yLine-2*strokeWeight);
+                                                               // cover the content of the scanbox, but not its outline
 
-    fill(80, 30, 120);                              // desciption txt
+    fill(textColour);                                          // text colour for desciption txt
     infoX += descripEdge;
-    addText(this.name, infoX+5, infoY+5, fontItemName, LEFT, TOP);    // display name of enlarged item
-    for (int i = 0; i < descrip.length; i++)        // display description of enlarged item
+    addText(this.name, infoX+5, infoY+5, fontSizeItemName, LEFT, TOP);    // display name of enlarged item
+    for (int i = 0; i < descrip.length; i++)                   // display description of enlarged item
     {
-      addText(descrip[i], infoX+5, infoY+fontItemName+10+(i*fontItemDesc), fontItemDesc, LEFT, TOP);
+      addText(descrip[i], infoX+5, infoY+fontSizeItemName+((i+1)*fontSizeItemDesc), fontSizeItemDesc, LEFT, TOP);
     }
-                                                    // display Close button (to unenlarge item)
+                                                               // display Close button (to unenlarge item)
     close = new Button("Close", infoX+infoWidth-dbutWidth-10, infoY+10, dbutWidth, dbutHeight, dBut);
     close.drawSelf();
   }
   
   public boolean clicked()
   {
+    // if item is clicked while it is not enlarged and there are either no enlargements or enlargements are for the same container
     if (!enlarged && mousePressedOver() && mousePressed && !clickAct && (enlargedContainer == 0 || enlargedContainer == this.container))
     {  //ensures mutex
       clickAct = true;
@@ -215,24 +232,24 @@ public class Item
       return false;
   }
   
-  public void heldDrag()
-  {  //needed for ordering importance of items (was activity3; no longer used)
-    if (clicked()) held = true;
-    if (held == true)
-    {
-      if ((mouseX > 0 && mouseX < windowWidth && mouseY > yLine && mouseY < windowHeight)
-      && ((this.container == 1 && mouseX < xMid) || (this.container == 2 && mouseX > xMid)))
-      {
-        x = mouseX-(smallImg.width/2);
-        y = mouseY-(smallImg.height/2);
-      }
-      if (!clickAct) held = false;
-    }
-  }
+  //public void heldDrag()
+  //{  //needed for ordering importance of items (was activity3; no longer used)
+  //  if (clicked()) held = true;
+  //  if (held == true)
+  //  {
+  //    if ((mouseX > 0 && mouseX < windowWidth && mouseY > yLine && mouseY < windowHeight)
+  //    && ((this.container == 1 && mouseX < xMid) || (this.container == 2 && mouseX > xMid)))
+  //    {
+  //      x = mouseX-(smallImg.width/2);
+  //      y = mouseY-(smallImg.height/2);
+  //    }
+  //    if (!clickAct) held = false;
+  //  }
+  //}
   
-  public boolean detectCollision()      // used to display scanned objects randomly on screen without overlapping
+  public boolean detectCollision()                             // used to display scanned objects randomly on screen without overlapping
   {
-    int myX = this.x + this.smallImg.width/8;      // add small allowance: objects allowed to overlap by 1/8 at any edge
+    int myX = this.x + this.smallImg.width/8;                  // add small allowance: objects allowed to overlap by 1/8 at any edge
     int myY = this.y + this.smallImg.height/8;
     int myWid = this.smallImg.width - this.smallImg.width/8;
     int myHei = this.smallImg.height - this.smallImg.height/8;
@@ -317,81 +334,83 @@ public class Button
   public void drawSelf()
   {
     noStroke();
-    fill(col);
-    //rect(x, y, wid, hei);
-    image(butImg, x, y);
+    image(butImg, x, y);                                       // display button image
     
-    if (mouseHoverOver()) fill(224, 164, 14);           // colour when mouse is hovering over
-    else fill(255, 255, 255);                           // colour when mouse is not^
-    //addText(txt, x+(wid/2)-2, y+(hei/2)-2, hei/2, CENTER, CENTER); // text is half height of button
-    addText(txt, x+(wid/2)-2, y+(hei*3/7), hei*3/7, CENTER, CENTER);   // text is 3/7 height of button
+    if (mouseHoverOver()) fill(highlightColour);               // colour of text when mouse is hovering over
+    else fill(textColour);                                     // colour of text when mouse is not hovering over
+    addText(txt, x+(wid/2)-2, y+(hei*3/8), hei/2, CENTER, CENTER);    // text is 1/2 height of button, and vertically centred
     
-    fill(255, 255, 255);                                // reset colour back to white
-    stroke(67, 49, 167);
+    fill(textColour);                                          // reset text colour back to normal
+    stroke(textColour);                                        // turn outline back on 
   }
   
-  public void changeTxt(String t)
+  public void changeTxt(String t)                              // change text for this button
   {
     this.txt = t;
   }
 }
 
-Item[] crateItems = new Item[numItems];                 // all the items that the participant could scan
-Button rBut;                                            // right button, used for 'Done' or 'Next'
-Button lBut;                                            // left button, used for 'Back'
-Button spaceBut[];                                      // soft keyboard space bar
-Button keyBut[];                                        // soft keyboard buttons
+Item[] crateItems = new Item[numItems];                        // all the items that the participant could scan
+Button rBut;                                                   // right button, used for 'Done' or 'Next'
+Button lBut;                                                   // left button, used for 'Back'
+Button enterBut;                                               // Enter button on Welcome screen, used to get started
+Button keyBut[];                                               // soft keyboard buttons
 String softKeyValue[][] = {{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "+", "Bksp"}, 
                               {"a", "s", "d", "f", "g", "h", "j", "k", "l", "-"}, 
                                  {"z", "x", "c", "v", "b", "n", "m", "'", "Enter"}, 
                                     {" "}
                           };
 
-Serial bagPort;                                         // input from Bag scanner
-Serial boxPort;                                         // input from Box scanner
-Serial printPort;                                       // output to printer
+Serial bagPort;                                                // input from Bag scanner
+Serial boxPort;                                                // input from Box scanner
+Serial printPort;                                              // output to printer
 ItemTag latestScan = new ItemTag();
 String tagID = "";
 
 void setup()
 {
-  //fullScreen();                   // comment out to make the screen windowed
-  //size(1300, 700);                // OR comment out to make full screen
-  size(1280, 800);                // for 10" touchscreen (on Pi), was (1280,470)
+  //fullScreen();                                                // comment out to make the screen windowed
+  //size(1300, 700);                                             // OR comment out to make full screen
+  size(1280, 800);                                             // for 10" touchscreen (on Pi)
   windowWidth = width;
   windowHeight = height;
 
   // calculate all the screen start positions and fonts at start-up, to speed execution of main loop (draw) 
-  xMid =  windowWidth/2;                                // x co-ordinate of middle of window
-  yHeaderLine = windowHeight/8;                         // y co-ordinate for screens with a large header line
-  fontHeaderLine = windowWidth/24;                      // font size for header lines
-  yLine = windowHeight*9/100;                           // y co-ordinate for Line across screen
-  xTitleLine = 20;                                      // x co-ordinate of start of Title drawn above Line across screen (for list headers)
-  yTitleLine = yLine/2;                                 // y co-ordinate of start of TitleLine
-  fontTitleLine = windowWidth/40;                       // font size for TitleLine
-  ySmallItemGap = windowHeight/100;                     // small vertical gap between spaced items
-  yLargeItemGap = windowHeight/15;                      // large vertical gap between spaced items
-  ySubTitleLine = yLine + ySmallItemGap;                // y co-ordinate for start of SubTitle below line drawn across screen
-  fontSubTitleLine = fontTitleLine - 5;                 // font size for SubTitleLine
-  xSandbags = windowWidth/4;                            // x co-ordinate for start of left-justified text on screen with sandbags image
-  xThumbsUpWR = 2*windowWidth/5;                        // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
-  xActivity1 = xTitleLine+windowWidth/30;               // x co-ordinate for start of user input in Activity1
-  lineWidthActivity1 = (windowWidth - 4*xActivity1)/3;  // each input line is a third of screen width ignoring gaps at edges and between columns
-  fontLineActivity1 = lineWidthActivity1 / 12;          // use a font size that allows about 20 chars on each input line
-  xPromptActivity1 = xMid - lineWidthActivity1/2;       // x co-ordinate for extra prompts for Activity1
-  fontScanBox = windowHeight/20;                        // font size for Box/Discard(Bag) titles on scanning screen 
-  fontItemName = fontTitleLine;                         // font size for Name of enlarged scanned item
-  fontItemDesc = fontItemName - 10;                     // font size for Description of enlarged scanned item
-  infoWidth = (windowWidth/2) - (descripEdge*2);        // width of enlarged item description
+  xMid =  windowWidth/2;                                       // x co-ordinate of middle of window
+  yHeaderLine = windowHeight/8;                                // y co-ordinate for screens with a large header line
+  fontSizeHeader = windowWidth/24;                             // font size for header lines
+  yLine = windowHeight*9/100;                                  // y co-ordinate for Line across screen
+  xTitleLine = 20;                                             // x co-ordinate of start of Title drawn above Line across screen (for list headers)
+  yTitleLine = yLine/2;                                        // y co-ordinate of start of TitleLine
+  fontSizeTitle = windowWidth/28;                              // font size for TitleLine
+  ySmallItemGap = windowHeight/100;                            // small vertical gap between spaced items
+  yLargeItemGap = windowHeight/15;                             // large vertical gap between spaced items
+  ySubTitleLine = yLine + ySmallItemGap;                       // y co-ordinate for start of SubTitle below line drawn across screen
+  fontSizeSubTitle = fontSizeTitle-15;                         // font size for SubTitleLine
+  fontSizeText = fontSizeSubTitle-5;                           // font size for Text
+  //println("fontSizeTitle=" + fontSizeTitle);
+  //println("fontSizeSubTitle=" + fontSizeSubTitle);
+  //println("fontSizeText=" + fontSizeText);
+  xSandbags = windowWidth/4;                                   // x co-ordinate for start of left-justified text on screen with sandbags image
+  xThumbsUpWR = windowWidth*2/5;                               // x co-ordinate for start of left-justified text on screen with thumbsupwithoutrescue image
+  xCouchCat = windowWidth/4;                                   // x co-ordinate for start of left-justified text on screen with couchcat image
+  xActivity1 = xTitleLine+windowWidth/30;                      // x co-ordinate for start of user input in Activity1
+  lineWidthActivity1 = (windowWidth - 4*xActivity1)/3;         // each input line is a third of screen width ignoring gaps at edges and between columns
+  fontSizeInputActivity1 = lineWidthActivity1 / 12;            // use a font size that allows about 20 chars on each input line
+  xPromptActivity1 = xMid - lineWidthActivity1/2;              // x co-ordinate for extra prompts for Activity1
+  fontSizeScanBox = windowHeight/20;                           // font size for Box/Discard(Bag) titles on scanning screen 
+  fontSizeItemName = fontSizeScanBox;                          // font size for Name of enlarged scanned item
+  fontSizeItemDesc = fontSizeItemName-10;                      // font size for Description of enlarged scanned item
+  infoWidth = (windowWidth/2) - (descripEdge*2);               // width of enlarged item description
   infoHeight = windowHeight - (descripEdge*2) - yLine - dbutHeight - 10;  // description fills other half of screen below Title line and above button
 
-  smallImageWidth = 100;                                // width of scanned item image 
-  largeImageWidth = 500;                                // max width of scanned item image when enlarged
-  largeImageHeight = infoHeight - 20;                   // max height of scanned item image when enlarged
+  smallImageWidth = 100;                                       // width of scanned item image 
+  largeImageWidth = 500;                                       // max width of scanned item image when enlarged
+  largeImageHeight = infoHeight - 20;                          // max height of scanned item image when enlarged
 
-  keyLineGap = windowHeight/200;                        // gap between each line of the soft keyboard
-  keyboardGap = windowWidth/14;                         // gap at each side of the soft keyboard
-  keyboardLine = 9*windowHeight/14;                     // start line for soft keyboard
+  keyLineGap = windowHeight/200;                               // gap between each line of the soft keyboard
+  keyboardGap = windowWidth/14;                                // gap at each side of the soft keyboard
+  keyboardLine = 9*windowHeight/14;                            // start line for soft keyboard
 
   
   //preload all the images, so they're ready for use when needed
@@ -399,17 +418,30 @@ void setup()
   //emergBag = loadImage("graphics/emergBag.png");
   welcome = loadImage("background graphics/welcome.jpg");
   welcome.resize(windowWidth, windowHeight);
+  couchcat = loadImage("background graphics/couchcatwithwoman.jpg");
+  couchcat.resize(windowWidth, windowHeight);
   boots = loadImage("background graphics/boots.jpg");
   boots.resize(windowWidth, windowHeight);
   sandbags = loadImage("background graphics/sandbags.jpg");
   sandbags.resize(windowWidth, windowHeight);
   thumbsupwithoutrescue = loadImage("background graphics/thumbsupwithoutrescue.jpg");
   thumbsupwithoutrescue.resize(windowWidth, windowHeight);
+  
+  // load the logos for the welcome page
+  LULogo = loadImage("graphics/logos/LULogo.png");
+  LULogo.resize(windowWidth/8, (int)(((float)LULogo.height/LULogo.width)*windowWidth/8));
+  EnvAgencyLogo = loadImage("graphics/logos/EnvAgencyLogo.png");
+  //EnvAgencyLogo.resize(windowWidth/8, (int)(((float)EnvAgencyLogo.height/EnvAgencyLogo.width)*windowWidth/8));
+  EnvAgencyLogo.resize((int)((float)EnvAgencyLogo.width*LULogo.height/EnvAgencyLogo.height), LULogo.height);  // scale to same height as LU logo
+  EnsembleLogo = loadImage("graphics/logos/EnsembleLogo.png");
+  EnsembleLogo.resize(windowWidth/8, (int)(((float)EnsembleLogo.height/EnsembleLogo.width)*windowWidth/8));
 
+  // preload the buttons
   dButX = windowWidth-dbutWidth-10;
   dButY = windowHeight-dbutHeight-10;
   rBut = new Button("Next", dButX, dButY, dbutWidth, dbutHeight, dBut);
   lBut = new Button("Back", 10, dButY, dbutWidth, dbutHeight, dBut);
+  // preload the soft keyboard
   loadSoftKeyboard();
     
   //create NFC tags (in order of image size, so that colliding small items are shown on top) 
@@ -437,9 +469,10 @@ void setup()
   crateItems[21] = new Item("18482685", "Camera");
   crateItems[22] = new Item("18549581", "Medication");
   
-  //surface.setSize(windowWidth, windowHeight);
-  font = createFont("Roboto Slab", 20);
-  textFont(font); //activates the font
+  // preload the fonts we're going to use
+  fontTitle = createFont("Roboto Slab", 30);
+  fontText = createFont("Open Sans", 20);
+  strokeWeight(strokeWeight);
   resetDefaults();
   
   // set up I/O ports by commenting out the lines you don't want
@@ -460,13 +493,16 @@ void setup()
   //printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
   //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
+
+  initialiseData();
 }
 
 void initialiseData()
 {
-  PPname = "";                          // clear the participant's name
-  //*/boxPort.clear();                  // reset the serial input ports //*/
+  PPname = "";                                                 // clear the participant's name
+  //*/boxPort.clear();                                         // reset the serial input ports //*/
   //*/bagPort.clear(); //*/
+  
   // clear the items entered by the participant
   a1Item = a1Items.length;
   while (a1Item > 0)
@@ -476,117 +512,144 @@ void initialiseData()
     a1Items = shorten(a1Items);
   }
   inStr = "";
-  itemsPresent = 0;                     // no items scanned yet
+  itemsPresent = 0;                                            // no items scanned yet
   // clear the items from the Flood Box, the Flood Bag, and the Report (first two are used by the report)
   clearReport();
   // mark all crate items as not scanned and not in the Box/Bag
   for (int i = 0; i < crateItems.length; i++)
   {
-    crateItems[i].present = false;    // item not scanned (for testing, set to true)
-    crateItems[i].container = 0;      // item not in a container (for testing, set to 1)
-    // for test purposes, pretend item has been scanned into Box
+    crateItems[i].present = false;                             // item not scanned (for testing, set to true)
+    crateItems[i].container = 0;                               // item not in a container (for testing, set to 1)
+    // for test purposes, pretend item has been scanned into Box/Bag
     if (i < 11 || i > 13)
     {
-      crateItems[i].present = true;       // item scanned
-      crateItems[i].container = 1;        // item in Box container
-      crateItems[i].scanned(1);           // place item randomly on screen
-      itemsPresent++;                     // count number of items present
+      crateItems[i].present = true;                            // item scanned
+      crateItems[i].container = 1;                             // item in Box container
+      crateItems[i].scanned(1);                                // place item randomly on screen
+      itemsPresent++;                                          // count number of items present
     }
     else
     {
-      crateItems[i].present = true;       // item scanned
-      crateItems[i].container = 2;        // item in Bag container
-      crateItems[i].scanned(2);           // place item randomly on screen
-      itemsPresent++;                     // count number of items present
+      crateItems[i].present = true;                            // item scanned
+      crateItems[i].container = 2;                             // item in Bag container
+      crateItems[i].scanned(2);                                // place item randomly on screen
+      itemsPresent++;                                          // count number of items present
     }
   }
-  enlargedContainer = 0;
+  enlargedContainer = 0;                                       // nothing is enlarged at the start
 }
 
 void startScreen()
 {
-  //if (mousePressed) clickAct = true;  //prevents buttons on next screen activating
-  initialiseData();                     // clear data for restart for next user
-  state = State.NAMEENTRY;
+  //if (mousePressed) clickAct = true;                         // prevents buttons on next screen activating
+  //int lineY = yHeaderLine;
+
+  fill(textColour);                                            // colour for all display fonts
+  if (showBackgroundImages)
+    image(welcome, 0, 0);                                      // display the flood picture and welcome text
+  else
+    addText("Welcome", xMid, yLine, fontSizeHeader*2, CENTER, CENTER);    // display a plain background, with welcome text
+  // draw button "click to Enter" just below Welcome
+  addText("This interactive display aims to raise awareness of flooding", xMid, yHeaderLine+fontSizeHeader+fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
+  addText("and the steps you can take to reduce its impact", xMid, yHeaderLine+fontSizeHeader+2*fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
+  enterBut = new Button("click to Enter", xMid-dbutWidth, yHeaderLine+3*fontSizeHeader, 2*dbutWidth, dbutHeight, dBut); 
+  // display a white band along the bottom of the screen, and display the fonts on this
+  // Note LU logo must have same amount of space above and below as used by "U"
+  fill(255, 255, 255, 190);                                    // white, with some transparency
+  rect(0, windowHeight-100, windowWidth, 100);
+  fill(textColour);
+  image(LULogo, windowWidth/5, windowHeight-75);
+  image(EnsembleLogo, xMid-EnsembleLogo.width/2, windowHeight-90);
+  image(EnvAgencyLogo, windowWidth*4/5-EnvAgencyLogo.width, windowHeight-75);
+  enterBut.drawSelf();                                         // display enter button
+  if (enterBut.clicked() || keyCode == ENTER)
+  {
+    state = State.NAMEENTRY;
+    keyCode = ' ';                                             // Enter has been dealt with, so clear it
+  }
 }
 
 int count = 0;
 void nameEntry()
 {
-  int lineY = yHeaderLine+3*fontTitleLine;
+  int lineY = yTitleLine;
 
+  fill(textColour);                                            // colour for all display fonts
   if (showBackgroundImages)
-  {
-    // display the flood picture and welcome text, with name prompt in black
-    image(welcome, 0, 0);
-    fill(0, 0, 0);
-  }
-  else
-  {
-    // display a plain background, with welcome text and name prompt in white
-    fill(255, 255, 255);
-    addText("Welcome", xMid, yHeaderLine, fontHeaderLine*2, CENTER, CENTER);
-  }
-  
-  addText("What's your name?", xMid-fontTitleLine, lineY, fontTitleLine, RIGHT, CENTER);
-  showSoftKeyboard(false); 
+    image(sandbags, 0, 0);
+  addText("Flooding can have a huge, long-term ", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
+  lineY += fontSizeTitle;
+  addText("effect on your home and your life", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
+  lineY += fontSizeTitle;
+  addText("Have you considered what you could do", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
+  lineY += fontSizeSubTitle;
+  addText("to reduce the impact of flooding?", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
+  lineY += 2*fontSizeTitle;
+  textFont(fontText);
+  addText("Let's take a look ...", xSandbags, lineY, fontSizeText, LEFT, CENTER);
+  lineY += 3*fontSizeSubTitle;
+  textFont(fontTitle);
+  //addText("What's your name?", xMid-fontSizeTitle, lineY, fontSizeTitle, RIGHT, CENTER);
+  addText("Would you like to tell us your name?", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
+  showSoftKeyboard(false);                                     // show keyboard without Enter key
   rBut.drawSelf();
-  fill(255, 0, 0);  //fill(224, 164, 14);
-  addText(PPname, xMid, lineY, fontTitleLine, LEFT, CENTER);
-  //line(xMid, lineY+3*fontTitleLine/4, xMid+10+fontTitleLine*9, lineY+3*fontTitleLine/4);  // draw a line where the user will enter their name
+  lBut.drawSelf();
+  fill(highlightColour);
+  addText(PPname, xSandbags, lineY+fontSizeTitle+10, fontSizeTitle, LEFT, CENTER);
   // draw a vertical line cursor where the input text is to go
-  if (alternator(500)) line(xMid+textWidth(PPname)+inputLineGap, lineY-fontTitleLine/4, xMid+textWidth(PPname)+inputLineGap, lineY+3*fontTitleLine/4);
+  if (alternator(500)) line(xSandbags+textWidth(PPname), lineY+fontSizeTitle+10-fontSizeTitle/4, xSandbags+textWidth(PPname), lineY+fontSizeTitle+10+3*fontSizeTitle/4);
 
-  handleSoftKeyboard(false);                  // show keyboard without Enter key
+  handleSoftKeyboard(false);                                   // handle input from soft keyboard
 
-  if (inStr.length() > maxNameLength)         // truncate name to maximum number of characters
+  if (inStr.length() > maxNameLength)                          // truncate name to maximum number of characters
     inStr = inStr.substring(0, maxNameLength);
   PPname = inStr;
   
-  if (rBut.clicked() || keyCode == ENTER)     // this line can be used (instead of the one below) so that Enter 
-                                              // can be used after typing name, rather than having to click Done.
+  if (lBut.clicked())                                          // if Back clicked
+    state = State.STARTSCREEN;                                 // go to previous screen
+  if (rBut.clicked() || keyCode == ENTER)                      // this line can be used (instead of the one below) so that Enter 
+                                                               // can be used after typing name, rather than having to click Done.
   //if (rBut.clicked())
-  {
+  {                                                            // if Next clicked
     if (a1Items.length > 0) inStr = a1Items[a1Item];
     else inStr = "";
-    state = State.ACTIVITY1;
+    state = State.ACTIVITY1;                                   // go to next screen
     softKey = ' ';
-    keyCode = ' ';                            // Enter has been dealt with, so clear it
+    keyCode = ' ';                                             // Enter has been dealt with, so clear it
   }
 }
 
-boolean tutorial = false;  // true if you want to display additional prompts re ENTER/BACKSPACE
+boolean tutorial = false;                                      // true if you want to display additional prompts re ENTER/BACKSPACE
 void activity1()
 {
   // displays 3 columns for user input; each column has 5 rows
   // first column displays all 5 items at the start
   // subsequent items are displayed only as needed (after previous item is entered)
-  int lineX = xActivity1;                     // x co-ordinate of first input line
-  int lineY = ySubTitleLine;
-  int startLineY;                             // y co-ordinate of start of user input
+  int lineX = xActivity1;                                      // x co-ordinate of first input line
+  int lineY = ySubTitleLine + fontSizeTitle;                   // the title on this screen occupies 2 lines
+  int startLineY;                                              // y co-ordinate of start of user input
 
+  fill(textColour);
   if (showBackgroundImages)
-  {
     image(boots, 0, 0);
-    fill(0, 0, 0);
-  }
 
-  //addText("What items do YOU think you should have ready in case of a flood" + (!PPname.equals("")? (", " + PPname):"") + "?", xTitleLine, yTitleLine, fontTitleLine, LEFT, CENTER);
-  addText("What items do YOU think you should have ready in case of a flood?", xTitleLine, yTitleLine, fontTitleLine, LEFT, CENTER);
-  line(0, yLine, windowWidth, yLine);    // draw line across width of screen
-  addText("List at least 5 below", xTitleLine, lineY, fontSubTitleLine, LEFT, TOP);
-  lineY += fontSubTitleLine + ySmallItemGap;
-  addText("Press Enter to add the next item.  Press Backspace to edit the previous item.", xTitleLine, lineY, fontSubTitleLine-5, LEFT, TOP);
+  addText("What items do YOU think you should have ready", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
+  addText("in case of a flood?", xTitleLine, yTitleLine+fontSizeTitle, fontSizeTitle, LEFT, CENTER);
+  textFont(fontText);                                          // activate the main font
+  addText("List at least 5 below", xTitleLine, lineY, fontSizeSubTitle, LEFT, TOP);
+  lineY += fontSizeSubTitle + ySmallItemGap;
+  addText("Press Enter to add the next item.  Press Backspace to edit the previous item.", xTitleLine, lineY, fontSizeText, LEFT, TOP);
   lineY += 2*yLargeItemGap;
   startLineY = lineY;
-  
-  showSoftKeyboard(true);    // show keyboard with Enter key
 
-  rBut.drawSelf();
+  textFont(fontTitle);
+  showSoftKeyboard(true);                                      // show keyboard with Enter key
+
+  rBut.drawSelf();                                             // display buttons
   lBut.drawSelf();
-  fill(0, 0, 0);            // set colour for prompts
+  textFont(fontText);                                          // activate the main font
 
-  if (keyCode == ENTER || softKey == ENTER)  // ensures less than 15 items
+  if (keyCode == ENTER || softKey == ENTER)                    // ensure no more than 15 items
   {
     //if (keyCode == ENTER) println("Keyboard Enter");
     //if (softKey == ENTER) println("softKey Enter");
@@ -596,7 +659,7 @@ void activity1()
       inStr = "";
       a1Item++;
     }
-    softKey = ' ';          // Enter has been dealt with, so clear it
+    softKey = ' ';                                             // Enter has been dealt with, so clear it
     keyCode = ' ';
   }
   
@@ -606,44 +669,44 @@ void activity1()
   {
     //if (keyCode == BACKSPACE) println("Keyboard Backspace");
     //if (softKey == BACKSPACE) println("softKey Backspace");
-    if ((a1Item > 0) && backAct)
+    if ((a1Item > 0) && backAct)                               // if backspace needs to go to previous item
     {
       //print("backAct");
-      a1Item--;
-      inStr = a1Items[a1Item];
-      backAct = false;      //dealt with
+      a1Item--;                                                // decrement number of items
+      inStr = a1Items[a1Item];                                 // and go to end of what is now the last item
+      backAct = false;                                         // dealt with
     }
-    softKey = ' ';          // Backspace has been dealt with, so clear it
+    softKey = ' ';                                             // Backspace has been dealt with, so clear it
     keyCode = ' ';
   }
 
   if (a1Item >= a1Items.length) a1Items = append(a1Items, "");      //should never be greater than, only ever equal to
   else if (a1Item < a1Items.length-1) a1Items = shorten(a1Items);  //shortens if item is MORE than 1 below length (i.e. -2 or worse)
  
-  if (tutorial)
+  if (tutorial)  // if tutorial required, display extra prompts on first 2 items on how to move on/back
   {
     if (a1Item == 0 && !a1Items[a1Item].equals(""))
-      addText("Press Enter to add the next item", xPromptActivity1, lineY, fontSubTitleLine-5, LEFT, BOTTOM);
+      addText("Press Enter to add the next item", xPromptActivity1, lineY, fontSizeText, LEFT, BOTTOM);
     //if (a1Item == 1 && a1Items[1].equals(""))
     if (a1Item == 1)
-      addText("Press Backspace to edit the previous item", xPromptActivity1, lineY+yLargeItemGap, fontSubTitleLine-5, LEFT, BOTTOM);
+      addText("Press Backspace to edit the previous item", xPromptActivity1, lineY+yLargeItemGap, fontSizeText, LEFT, BOTTOM);
   }
-  if (a1Items.length >= 3) tutorial = false;  //removes tutorial pointers once user has entered 3 items
-  //else tutorial = true;                       //restores tutorial if user reduces number of items
+  if (a1Items.length >= 3) tutorial = false;                   // removes tutorial pointers once user has entered 3 items
+  //else tutorial = true;                                      //restores tutorial if user reduces number of items
   if (a1Items.length == 5 && !a1Items[a1Item].equals(""))
   {
-    // display prompt for more, aligned with (and just above) last item entered
-    addText("Can you think of any more?", xPromptActivity1, lineY+(4*yLargeItemGap)-fontSubTitleLine-ySmallItemGap, fontSubTitleLine-5, LEFT, BOTTOM);
-    addText("Press Enter to continue adding", xPromptActivity1, lineY+(4*yLargeItemGap), fontSubTitleLine-5, LEFT, BOTTOM);
+    // display prompt for more items, aligned with (and just above) last item entered
+    addText("Can you think of any more?", xPromptActivity1, lineY+(4*yLargeItemGap)-fontSizeSubTitle-ySmallItemGap, fontSizeText, LEFT, BOTTOM);
+    addText("Press Enter to continue adding", xPromptActivity1, lineY+(4*yLargeItemGap), fontSizeText, LEFT, BOTTOM);
   }
 
-  fill(255, 0, 0);            // set colour for user input
-  for (int i = 0; i < 5; i++)
+  fill(highlightColour);                                       // set colour for user input
+  for (int i = 0; i < 5; i++)                                  // display first 5 items
   {
     //line(lineX, lineY+(i*yLargeItemGap), lineX+lineWidthActivity1, lineY+(i*yLargeItemGap)); //display underline for first 5 items
-    addText(str(i+1) + ".", lineX-fontLineActivity1-5, lineY+(i*yLargeItemGap), fontLineActivity1, LEFT, BOTTOM);  // display index number for first 5 items
+    addText(str(i+1) + ".", lineX-fontSizeInputActivity1-5, lineY+(i*yLargeItemGap), fontSizeInputActivity1, LEFT, BOTTOM);  // display index number for first 5 items
   }
-  for (int i = 0; i < a1Items.length; i++)
+  for (int i = 0; i < a1Items.length; i++)                     // display any additional items that have been entered
   {
     if (i >= 5)
     {
@@ -659,16 +722,16 @@ void activity1()
         lineX = xMid - lineWidthActivity1/2;
       }
       //line(lineX, lineY+(i*yLargeItemGap), lineX+lineWidthActivity1, lineY+(i*yLargeItemGap));  // display underline for next item
-      int numWidth = ((i < 9)? fontLineActivity1+5:5*fontLineActivity1/3);      // adjust position so index number is displayed right-aligned to user input
-      addText(str(i+1) + ".", lineX-numWidth, lineY+(i*yLargeItemGap), fontLineActivity1, LEFT, BOTTOM);  // display index number for next item
+      int numWidth = ((i < 9)? fontSizeInputActivity1+5:5*fontSizeInputActivity1/3);      // adjust position so index number is displayed right-aligned to user input
+      addText(str(i+1) + ".", lineX-numWidth, lineY+(i*yLargeItemGap), fontSizeInputActivity1, LEFT, BOTTOM);  // display index number for next item
     }
-    addText(a1Items[i], lineX, lineY+(i*yLargeItemGap), fontLineActivity1, LEFT, BOTTOM);
+    addText(a1Items[i], lineX, lineY+(i*yLargeItemGap), fontSizeInputActivity1, LEFT, BOTTOM);
   }
   // display vertical line as cursor for next input area
   if (alternator(500))
-    line(lineX+textWidth(a1Items[a1Item])+inputLineGap, lineY+(a1Item*yLargeItemGap)-fontLineActivity1-ySmallItemGap, lineX+textWidth(a1Items[a1Item])+inputLineGap, lineY+(a1Item*yLargeItemGap));
+    line(lineX+textWidth(a1Items[a1Item])+inputLineGap, lineY+(a1Item*yLargeItemGap)-fontSizeInputActivity1-ySmallItemGap, lineX+textWidth(a1Items[a1Item])+inputLineGap, lineY+(a1Item*yLargeItemGap));
 
-  softKey = handleSoftKeyboard(true);    // display keyboard with Enter key
+  softKey = handleSoftKeyboard(true);                          // display keyboard with Enter key
   
   if (textWidth(inStr) <= lineWidthActivity1) 
     a1Items[a1Item] = inStr;
@@ -678,48 +741,52 @@ void activity1()
     //println("too long");
   }
   
-  if (lBut.clicked())
-  {
+  if (lBut.clicked())                                          // if Back clicked
+  {                                                            // go back to previous screen, with its data
     inStr = PPname;
     state = State.NAMEENTRY;
   }
-  if (a1Items.length >= 0 && rBut.clicked()) //compare to 5 if you want to force user to enter 5 items
-  {
-    rBut.changeTxt("Next");
+  if (a1Items.length >= 0 && rBut.clicked())                   //compare to 5 if you want to force user to enter 5 items
+  {                                                            // if Next clicked and enough items entered
+    rBut.changeTxt("Next");                                    // go on to next screen
     state = State.TRANSIT1TO2;
   }
 }
 
 void transit1to2()
 {
+  fill(textColour);
   if (showBackgroundImages)
-  {
-    image(sandbags, 0, 0);
-    fill(0, 0, 0);
-  }
+    image(couchcat, 0, 0);
 
-  int yPos = yHeaderLine;
-  int fontSize = fontHeaderLine;
-  int xPos = xSandbags;
+  int yPos = yTitleLine;
+  int xPos = xCouchCat; //xSandbags;
 
-  addText("Great work" + (!PPname.equals("")? (", " + PPname):"") + "!", xPos, yPos, fontSize, LEFT, CENTER);
-  fontSize -=20;
-  yPos += 2*fontSize;
-  image(floodBox, windowWidth-250, yPos);
-  addText("The crate beside you holds items that", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += fontSize;
-  addText("you might find useful during a flood", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += 2*fontSize;
-  fill(80, 30, 120);     //fill(224, 164, 14);
-  addText("On the next screen, we'll ask you", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += fontSize;
-  addText("to select from these items to", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += fontSize;
-  addText("create your personal Flood Box,", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += fontSize;
-  addText("containing things you'll need", xPos, yPos, fontSize, LEFT, CENTER);
-  yPos += fontSize;
-  addText("to be prepared for a flood", xPos, yPos, fontSize, LEFT, CENTER);
+  addText("Great work" + (!PPname.equals("")? (", " + PPname):"") + "!", xPos, yPos, fontSizeTitle, LEFT, CENTER);
+  yPos += 2*fontSizeTitle;
+  //image(floodBox, windowWidth-250, yPos);
+  textFont(fontText); //activate the main font
+  addText("The crate beside you holds", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("items that you might find", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("useful during a flood", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += 2*fontSizeSubTitle;
+
+  addText("On the next screen, we'll", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("ask you to select from these", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("items to create your personal", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("Flood Box, containing things", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("you'll need to be prepared", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += fontSizeSubTitle;
+  addText("for a flood", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
+  yPos += 4*fontSizeSubTitle;
+  image(floodBox, (xPos-floodBox.width)/2, yPos);
+  textFont(fontTitle);
   rBut.drawSelf();
   lBut.drawSelf();
   if (lBut.clicked())
@@ -738,7 +805,7 @@ void transit1to2()
   if (rBut.clicked())
   {
     inStr = "";
-    latestScan = new ItemTag();        //resets tagID before activity2
+    latestScan = new ItemTag();                                // resets tagID before activity2
     //*/boxPort.clear(); //*/
     //*/bagPort.clear(); //*/
     state = State.ACTIVITY2;
@@ -747,31 +814,32 @@ void transit1to2()
  
 void activity2()
 {
-  if (showBackgroundImages)
-  {
-    fill(0, 0, 0);
-  }
-  addText("Scan the items you think you will need, and put them into the Flood Box", xTitleLine, yTitleLine, fontTitleLine, LEFT, CENTER);
-  line(0, yLine, windowWidth, yLine);
-  fill(80, 30, 120);  //fill (224, 164, 14); //yellow text
-  addText("Box", 10, yLine+5, fontScanBox, LEFT, TOP);
+  fill(textColour);
+  addText("Scan into the Flood Box the items you think you will need", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
+  //line(0, yLine, windowWidth, yLine);
+  textFont(fontText);                                          // activate the main font
+  addText("Box", 10, yLine+5, fontSizeScanBox, LEFT, TOP);
   line(xMid, yLine, xMid, windowHeight);
-  //fill (224, 164, 14); //yellow text
-  addText("Discard ", windowWidth-5, yLine+5, fontScanBox, RIGHT, TOP);
+  addText("Discard ", windowWidth-5, yLine+5, fontSizeScanBox, RIGHT, TOP);
+  textFont(fontTitle);
   rBut.changeTxt("Done");
-  rBut.drawSelf();
-  lBut.drawSelf();
+  if (enlargedContainer == 0)                                  // display Next/Back buttons only when no items are enlarged
+  {
+    rBut.drawSelf();
+    lBut.drawSelf();
+  }
+  textFont(fontText);
 
   for (int i = 0; i < crateItems.length; i++)
   {
     if (crateItems[i].id.equals(latestScan.id) && (!crateItems[i].present || crateItems[i].container != latestScan.container))
     {  //checks key against item IDs, then their presence OR scan into diff container
       //println("making present");
-      crateItems[i].scanned(latestScan.container);                  //parameter = container
+      crateItems[i].scanned(latestScan.container);             // parameter = container
       itemsPresent++;
       for (int j = 0; j < crateItems.length; j++)
       {
-        if (j != i) crateItems[j].enlarged = false;                 //resets the enlargement of all but the clicked one
+        if (j != i) crateItems[j].enlarged = false;            // resets the enlargement of all but the clicked one
       }
       crateItems[i].enlarge();
       //println("enlarge item " + i);
@@ -787,7 +855,7 @@ void activity2()
       {
         for (int j = 0; j < crateItems.length; j++)
         {
-          if (j != i) crateItems[j].enlarged = false; //resets the enlargement of all but the clicked one
+          if (j != i) crateItems[j].enlarged = false;          // reset the enlargement of all but the clicked item
         }
         crateItems[i].enlarge();
         //println("enlarge item " + i);
@@ -802,12 +870,12 @@ void activity2()
   }
   for (int i = 0; i < crateItems.length; i++)
     if (crateItems[i].enlarged) 
-      crateItems[i].enlarge();  //done after for drawing layer purposes
+      crateItems[i].enlarge();                                 // display enlarged item on top of all the other items
   
   if (lBut.clicked() && (enlargedContainer == 0))
   {
     for (int i = 0; i < crateItems.length; i++) 
-      crateItems[i].enlarged = false; //resets the enlargement of all
+      crateItems[i].enlarged = false;                          // resets the enlargement of all
     a1Item = a1Items.length - 1;
     if (a1Item >= 0)
       inStr = a1Items[a1Item];
@@ -822,42 +890,36 @@ void activity2()
   if (rBut.clicked() && (enlargedContainer == 0) && itemsPresent > 0) //*/
   {
     for (int i = 0; i < crateItems.length; i++) 
-      crateItems[i].enlarged = false; //resets the enlargement of all
+      crateItems[i].enlarged = false;                          // resets the enlargement of all
     inStr = "";
     state = State.REPORT;
   }
 }
 
-boolean once = false;        // for debug print
+boolean once = false;                                          // for debug print
 
-//boolean repSaved = false;  // true once the report has been saved
+//boolean repSaved = false;                                    // true once the report has been saved
 void report()
 {
-  if (showBackgroundImages)
-  {
-    //image(thumbsup, 0, 0);
-    fill(0, 0, 0);
-  }
-  int titleS = fontTitleLine - 5;
-  int itemS = titleS - 5;
   int startL = ySubTitleLine;
 
-  addText(((!PPname.equals("")?(PPname + "'s"):"My") + " Flood Preparation Checklist"), xTitleLine, yTitleLine, fontTitleLine, LEFT, CENTER);
-  line(0, yLine, windowWidth, yLine);
+  fill(textColour);
+  addText(((!PPname.equals("")?(PPname + "'s"):"My") + " Flood Preparation Checklist"), xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
+  //line(0, yLine, windowWidth, yLine);
   rBut.drawSelf();
   lBut.drawSelf();
-  fill(80, 30, 120);
   
+  textFont(fontText);
   if (a1Item >= 0 && a1Items[a1Item].equals(""))
   {
     a1Item--;
-    a1Items = shorten(a1Items);  //removes the empty field - this empty will return if user goes back
+    a1Items = shorten(a1Items);                                // remove the empty field - this empty item will return if user goes back
   }
   if (report.length == 0)
     makeReport();
   
-  addText("Items that I felt were important", xTitleLine, startL, titleS, LEFT, TOP);
-  startL += titleS+5;
+  addText("Items that I felt were important", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);
+  startL += fontSizeSubTitle+10;
   if (once) println(startL);
   
   int itemNum = 0;
@@ -869,17 +931,17 @@ void report()
       //println("i: " + i + "j: " + j + "num: " + itemNum + "len: " + a1Items.length);
       if (itemNum < a1Items.length)
       {        
-        addText(str(itemNum+1) + ": " + a1Items[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(itemS+ySmallItemGap)), itemS, LEFT, TOP);  
+        addText(str(itemNum+1) + ": " + a1Items[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
         itemNum++;
       }
     }
   }
-  startL += ((itemS+ySmallItemGap) * (ceil(float(a1Items.length)/3))) + 5; 
+  startL += ((fontSizeText+ySmallItemGap) * (ceil(float(a1Items.length)/3))) + 5; 
 
   if (boxItems.length > 0)
   {
-    addText("My flood box items", xTitleLine, startL, titleS, LEFT, TOP);
-    startL += titleS+5;
+    addText("My flood box items", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);
+    startL += fontSizeSubTitle+10;
     
     itemNum = 0;
     if (once) println("len: " + boxItems.length + " | len/3: " + float(boxItems.length)/3);
@@ -890,18 +952,18 @@ void report()
         //println("i: " + i + "j: " + j + "num: " + itemNum + "len: " + a1Items.length);
         if (itemNum < boxItems.length)
         {        
-          addText(str(itemNum+1) + ": " + boxItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(itemS+ySmallItemGap)), itemS, LEFT, TOP);  
+          addText(str(itemNum+1) + ": " + boxItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
           itemNum++;
         }
       }
     }
-    startL += ((itemS+ySmallItemGap) * (ceil(float(boxItems.length)/3))) + 5;
+    startL += ((fontSizeText+ySmallItemGap) * (ceil(float(boxItems.length)/3))) + 5;
   }
   
   if (bagItems.length > 0)
   {
-    addText("My emergency bag items", xTitleLine, startL, titleS, LEFT, TOP);  
-    startL += titleS+5;
+    addText("My emergency bag items", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);  
+    startL += fontSizeSubTitle+10;
     
     itemNum = 0;
     if (once) println("len: " + bagItems.length + " | len/3: " + float(bagItems.length)/3);
@@ -912,7 +974,7 @@ void report()
         //println("i: " + i + "j: " + j + "num: " + itemNum + "len: " + a1Items.length);
         if (itemNum < bagItems.length)
         {        
-          addText(str(itemNum+1) + ": " + bagItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(itemS+ySmallItemGap)), itemS, LEFT, TOP);  
+          addText(str(itemNum+1) + ": " + bagItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
           itemNum++;
         }
       }
@@ -922,7 +984,7 @@ void report()
 
   if (lBut.clicked())
   {
-    clearReport();      // clear the report data in case the user changes the scanned items
+    clearReport();                                             // clear the report data in case the user changes the scanned items
     state = State.ACTIVITY2;
   }
   if (rBut.clicked())
@@ -947,28 +1009,35 @@ void report()
 
 void finished()
 {
+  fill(textColour);
   if (showBackgroundImages)
-  {
     image(thumbsupwithoutrescue, 0, 0);
-  }
-  fill(80, 30, 120);
 
   int yPos = yHeaderLine;
-  int fontSize = fontHeaderLine;
+  int fontSize = fontSizeHeader;
   int xPos = (showBackgroundImages ? xThumbsUpWR : xMid);
 
   // if background images are displayed the text is shown left justified to the right of the image
   addText("Thanks for taking part" + (!PPname.equals("")?(" " + PPname):"") + "!", xMid, yPos, fontSize, CENTER, CENTER);
   fontSize -= 10;
   yPos += 3*fontSize;
+  textFont(fontText); //activate the main font
   addText("Please take your printout to use", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
   yPos += fontSize;
   addText("as your Flood Box checklist", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
+  yPos += 5*fontSize;
+  xPos = xMid;
+  fontSize -= 10;
+  addText("For more information visit:", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
+  yPos += fontSize+ySmallItemGap;
+  addText("nationalfloodforum.org.uk", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
+  textFont(fontTitle);
   rBut.drawSelf();
   rBut.changeTxt("Restart");
   if (rBut.clicked())
   {
     rBut.changeTxt("Next");
+    initialiseData();                                          // clear data for restart for next user
     state = State.STARTSCREEN;
   }
 } 
@@ -1129,15 +1198,9 @@ void addText(String txt, int x, int y, int size, int xAlign, int yAlign)
 
 void resetDefaults()
 {
-  stroke(0);
-
-  background(169, 190, 217);  //34, 22, 122);
-  fill(169, 190, 217);  //34, 22, 122);
-  noStroke();
-  rect(strokeWeight, strokeWeight, windowWidth-(strokeWeight*2), windowHeight-(strokeWeight*2));
-  stroke(67, 49, 167);
-  strokeWeight(strokeWeight);
-  fill(255, 255, 255);
+  background(backgroundColour);                                // colour of background
+  stroke(textColour);                                          // colour of line and text
+  textFont(fontTitle);                                         // activate the title font
 }
 
 void serialEvent(Serial port)
@@ -1174,16 +1237,18 @@ boolean alternator(int time)
 void keyPressed()
 {
   //print(keyCode + " ");
-  backAct = false;            //assumes key is not a BACKSPACE with a blank inStr
+  backAct = false;                                             // assumes key is not a BACKSPACE with a blank inStr
   if (keyCode == BACKSPACE)
   {
     if (inStr.length() > 0) inStr = inStr.substring(0, inStr.length() - 1);
-    else backAct = true;      //corrects if key IS BACKSPACE with a blank inStr
+    else backAct = true;                                       // corrects if key IS BACKSPACE with a blank inStr
   }
-  else if ((keyCode >= ' ' && keyCode < 127) || keyCode == 222)
+  //else if ((keyCode >= ' ' && keyCode < 127) || keyCode == 222)
+  else if (key >= ' ' && key <= '~')
   {
     //should allow all numbers and letters, space, dash, comma, apostrophe
-    inStr = inStr + key;
+    if (key != ' ' || inStr.length() > 0)                      // ignore space at the start of the input line
+      inStr = inStr + key;
   }
   //print(inStr);
 }
@@ -1192,7 +1257,7 @@ void loadSoftKeyboard()
 {
   // set button size and position to scale with screen size
   int keyButWidth = (windowWidth - 2*keyboardGap) / (softKeyValue[0].length);  // leave gap at each side of keyboard
-  int keyButHeight = keyButWidth * dbutHeight / dbutWidth;
+  int keyButHeight = keyButWidth * dKeyHeight / dKeyWidth;
   int lineX = keyboardGap;                                     // calculate start xPosition of keyboard;
   int lineY = keyboardLine;
   keyBut = new Button[softKeyValue.length * softKeyValue[0].length];
@@ -1258,7 +1323,7 @@ char handleSoftKeyboard(boolean showEnter)
         }
         else if (softKeyValue[row][col].equals(" "))
         {
-          if (inStr.length() > 0)                      // ignore space at the start of the input line
+          if (inStr.length() > 0)                              // ignore space at the start of the input line
             inStr += softKeyValue[row][col];
         }
         else
