@@ -53,8 +53,9 @@ int dKeyWidth = 120;                                           // default soft k
 int dKeyHeight = 65;                                           // default soft key height
 
 color dBut = color(255,255,255,150);                           // white, semi-transparent
-color backgroundColour = color(249, 244, 241);                 // 'pinkish' background colour
-color backgroundTransparent = color(249, 244, 241, 150);       // semi-transparent background colour
+color eBut = color(255,255,255,10);                           // white, less transparent
+color backgroundColour = color(252, 252, 252);  //(249, 244, 241);                 // 'pinkish' background colour
+color backgroundTransparent = color(252, 252, 252, 150);  //(249, 244, 241, 150);       // semi-transparent background colour
 color textColour = color(33, 33, 33);                          // graphite colour of text
 color highlightColour = color(246, 79, 90);                    // cerise colour of highlighted text, or user input field
 
@@ -552,7 +553,7 @@ void startScreen()
   // draw button "click to Enter" just below Welcome
   addText("This interactive display aims to raise awareness of flooding", xMid, yHeaderLine+fontSizeHeader+fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
   addText("and the steps you can take to reduce its impact", xMid, yHeaderLine+fontSizeHeader+2*fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
-  enterBut = new Button("click to Enter", xMid-dbutWidth, yHeaderLine+3*fontSizeHeader, 2*dbutWidth, dbutHeight, dBut); 
+  enterBut = new Button("click to Enter", xMid-dbutWidth, yHeaderLine+3*fontSizeHeader, 5*dbutWidth/3, dbutHeight, eBut); 
   // display a white band along the bottom of the screen, and display the fonts on this
   // Note LU logo must have same amount of space above and below as used by "U"
   fill(255, 255, 255, 190);                                    // white, with some transparency
@@ -910,13 +911,16 @@ void report()
   lBut.drawSelf();
   
   textFont(fontText);
-  if (a1Item >= 0 && a1Items[a1Item].equals(""))
-  {
-    a1Item--;
-    a1Items = shorten(a1Items);                                // remove the empty field - this empty item will return if user goes back
-  }
   if (report.length == 0)
+  {
+    if ((a1Item >= 0) && (a1Items.length != 0) && (a1Items[a1Item].equals("")))
+    {
+      a1Item--;
+      a1Items = shorten(a1Items);                                // remove the empty field
+    }
     makeReport();
+    if (a1Item < 0) a1Item = 0;
+  }
   
   addText("Items that I felt were important", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);
   startL += fontSizeSubTitle+10;
