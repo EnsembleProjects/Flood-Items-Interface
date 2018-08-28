@@ -54,8 +54,8 @@ int dKeyHeight = 65;                                           // default soft k
 
 color dBut = color(255,255,255,150);                           // white, semi-transparent
 color eBut = color(255,255,255,10);                           // white, less transparent
-color backgroundColour = color(252, 252, 252);  //(249, 244, 241);                 // 'pinkish' background colour
-color backgroundTransparent = color(252, 252, 252, 150);  //(249, 244, 241, 150);       // semi-transparent background colour
+color backgroundColour = color(249, 246, 244);  //(249, 244, 241);                 // 'pinkish' background colour
+color backgroundTransparent = color(249, 246, 244, 150);  //(249, 244, 241, 150);       // semi-transparent background colour
 color textColour = color(33, 33, 33);                          // graphite colour of text
 color highlightColour = color(246, 79, 90);                    // cerise colour of highlighted text, or user input field
 
@@ -383,12 +383,12 @@ void setup()
   yLine = windowHeight*9/100;                                  // y co-ordinate for Line across screen
   xTitleLine = 20;                                             // x co-ordinate of start of Title drawn above Line across screen (for list headers)
   yTitleLine = yLine/2;                                        // y co-ordinate of start of TitleLine
-  fontSizeTitle = windowWidth/28;                              // font size for TitleLine
+  fontSizeTitle = windowWidth/30;                              // font size for TitleLine
   ySmallItemGap = windowHeight/100;                            // small vertical gap between spaced items
   yLargeItemGap = windowHeight/15;                             // large vertical gap between spaced items
   ySubTitleLine = yLine + ySmallItemGap;                       // y co-ordinate for start of SubTitle below line drawn across screen
   fontSizeSubTitle = fontSizeTitle-15;                         // font size for SubTitleLine
-  fontSizeText = fontSizeSubTitle-5;                           // font size for Text
+  fontSizeText = fontSizeSubTitle;                             // font size for Text
   //println("fontSizeTitle=" + fontSizeTitle);
   //println("fontSizeSubTitle=" + fontSizeSubTitle);
   //println("fontSizeText=" + fontSizeText);
@@ -397,11 +397,11 @@ void setup()
   xCouchCat = windowWidth/4;                                   // x co-ordinate for start of left-justified text on screen with couchcat image
   xActivity1 = xTitleLine+windowWidth/30;                      // x co-ordinate for start of user input in Activity1
   lineWidthActivity1 = (windowWidth - 4*xActivity1)/3;         // each input line is a third of screen width ignoring gaps at edges and between columns
-  fontSizeInputActivity1 = lineWidthActivity1 / 12;            // use a font size that allows about 20 chars on each input line
+  fontSizeInputActivity1 = lineWidthActivity1/12;              // use a font size that allows about 20 chars on each input line
   xPromptActivity1 = xMid - lineWidthActivity1/2;              // x co-ordinate for extra prompts for Activity1
-  fontSizeScanBox = windowHeight/20;                           // font size for Box/Discard(Bag) titles on scanning screen 
+  fontSizeScanBox = fontSizeSubTitle;                          // font size for Box/Discard(Bag) titles on scanning screen 
   fontSizeItemName = fontSizeScanBox;                          // font size for Name of enlarged scanned item
-  fontSizeItemDesc = fontSizeItemName-10;                      // font size for Description of enlarged scanned item
+  fontSizeItemDesc = fontSizeItemName-5;                       // font size for Description of enlarged scanned item
   infoWidth = (windowWidth/2) - (descripEdge*2);               // width of enlarged item description
   infoHeight = windowHeight - (descripEdge*2) - yLine - dbutHeight - 10;  // description fills other half of screen below Title line and above button
 
@@ -553,7 +553,7 @@ void startScreen()
   // draw button "click to Enter" just below Welcome
   addText("This interactive display aims to raise awareness of flooding", xMid, yHeaderLine+fontSizeHeader+fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
   addText("and the steps you can take to reduce its impact", xMid, yHeaderLine+fontSizeHeader+2*fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
-  enterBut = new Button("click to Enter", xMid-dbutWidth, yHeaderLine+3*fontSizeHeader, 5*dbutWidth/3, dbutHeight, eBut); 
+  enterBut = new Button("ENTER", xMid-(dbutWidth/2), yHeaderLine+3*fontSizeHeader, dbutWidth, dbutHeight, eBut); 
   // display a white band along the bottom of the screen, and display the fonts on this
   // Note LU logo must have same amount of space above and below as used by "U"
   fill(255, 255, 255, 190);                                    // white, with some transparency
@@ -582,15 +582,14 @@ void nameEntry()
   lineY += fontSizeTitle;
   addText("effect on your home and your life", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
   lineY += fontSizeTitle;
+  textFont(fontText);
   addText("Have you considered what you could do", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
   lineY += fontSizeSubTitle;
   addText("to reduce the impact of flooding?", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
   lineY += 2*fontSizeTitle;
-  textFont(fontText);
   addText("Let's take a look ...", xSandbags, lineY, fontSizeText, LEFT, CENTER);
   lineY += 3*fontSizeSubTitle;
   textFont(fontTitle);
-  //addText("What's your name?", xMid-fontSizeTitle, lineY, fontSizeTitle, RIGHT, CENTER);
   addText("Would you like to tell us your name?", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
   showSoftKeyboard(false);                                     // show keyboard without Enter key
   rBut.drawSelf();
@@ -638,7 +637,7 @@ void activity1()
   addText("in case of a flood?", xTitleLine, yTitleLine+fontSizeTitle, fontSizeTitle, LEFT, CENTER);
   textFont(fontText);                                          // activate the main font
   addText("List at least 5 below", xTitleLine, lineY, fontSizeSubTitle, LEFT, TOP);
-  lineY += fontSizeSubTitle + ySmallItemGap;
+  lineY += fontSizeSubTitle;
   addText("Press Enter to add the next item.  Press Backspace to edit the previous item.", xTitleLine, lineY, fontSizeText, LEFT, TOP);
   lineY += 2*yLargeItemGap;
   startLineY = lineY;
@@ -697,7 +696,7 @@ void activity1()
   if (a1Items.length == 5 && !a1Items[a1Item].equals(""))
   {
     // display prompt for more items, aligned with (and just above) last item entered
-    addText("Can you think of any more?", xPromptActivity1, lineY+(4*yLargeItemGap)-fontSizeSubTitle-ySmallItemGap, fontSizeText, LEFT, BOTTOM);
+    addText("Can you think of any more?", xPromptActivity1, lineY+(4*yLargeItemGap)-fontSizeText-ySmallItemGap, fontSizeText, LEFT, BOTTOM);
     addText("Press Enter to continue adding", xPromptActivity1, lineY+(4*yLargeItemGap), fontSizeText, LEFT, BOTTOM);
   }
 
@@ -767,25 +766,25 @@ void transit1to2()
   yPos += 2*fontSizeTitle;
   //image(floodBox, windowWidth-250, yPos);
   textFont(fontText); //activate the main font
-  addText("The crate beside you holds", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("items that you might find", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("useful during a flood", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += 2*fontSizeSubTitle;
+  addText("The crate beside you holds", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("items that you might find", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("useful during a flood", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += 2*fontSizeText;
 
-  addText("On the next screen, we'll", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("ask you to select from these", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("items to create your personal", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("Flood Box, containing things", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("you'll need to be prepared", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += fontSizeSubTitle;
-  addText("for a flood", xPos, yPos, fontSizeSubTitle, LEFT, CENTER);
-  yPos += 4*fontSizeSubTitle;
+  addText("On the next screen, we'll", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("ask you to select from these", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("items to create your personal", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("Flood Box, containing things", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("you'll need to be prepared", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += fontSizeText;
+  addText("for a flood", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += 4*fontSizeText;
   image(floodBox, (xPos-floodBox.width)/2, yPos);
   textFont(fontTitle);
   rBut.drawSelf();
@@ -922,8 +921,8 @@ void report()
     if (a1Item < 0) a1Item = 0;
   }
   
-  addText("Items that I felt were important", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);
-  startL += fontSizeSubTitle+10;
+  addText("Items that I felt were important", xTitleLine, startL, fontSizeText, LEFT, TOP);
+  startL += fontSizeText+10;
   if (once) println(startL);
   
   int itemNum = 0;
@@ -944,8 +943,8 @@ void report()
 
   if (boxItems.length > 0)
   {
-    addText("My flood box items", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);
-    startL += fontSizeSubTitle+10;
+    addText("My flood box items", xTitleLine, startL, fontSizeText, LEFT, TOP);
+    startL += fontSizeText+10;
     
     itemNum = 0;
     if (once) println("len: " + boxItems.length + " | len/3: " + float(boxItems.length)/3);
@@ -966,8 +965,8 @@ void report()
   
   if (bagItems.length > 0)
   {
-    addText("My emergency bag items", xTitleLine, startL, fontSizeSubTitle, LEFT, TOP);  
-    startL += fontSizeSubTitle+10;
+    addText("My emergency bag items", xTitleLine, startL, fontSizeText, LEFT, TOP);  
+    startL += fontSizeText+10;
     
     itemNum = 0;
     if (once) println("len: " + bagItems.length + " | len/3: " + float(bagItems.length)/3);
@@ -1018,23 +1017,21 @@ void finished()
     image(thumbsupwithoutrescue, 0, 0);
 
   int yPos = yHeaderLine;
-  int fontSize = fontSizeHeader;
   int xPos = (showBackgroundImages ? xThumbsUpWR : xMid);
 
   // if background images are displayed the text is shown left justified to the right of the image
-  addText("Thanks for taking part" + (!PPname.equals("")?(" " + PPname):"") + "!", xMid, yPos, fontSize, CENTER, CENTER);
-  fontSize -= 10;
-  yPos += 3*fontSize;
+  addText("Thanks for taking part" + (!PPname.equals("")?(" " + PPname):"") + "!", xMid, yPos, fontSizeTitle, CENTER, CENTER);
+  yPos += 3*fontSizeTitle;
   textFont(fontText); //activate the main font
-  addText("Please take your printout to use", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
-  yPos += fontSize;
-  addText("as your Flood Box checklist", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
-  yPos += 5*fontSize;
-  xPos = xMid;
-  fontSize -= 10;
-  addText("For more information visit:", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
-  yPos += fontSize+ySmallItemGap;
-  addText("nationalfloodforum.org.uk", xPos, yPos, fontSize, (showBackgroundImages?LEFT:CENTER), CENTER);
+  addText("Please take your printout to use", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  yPos += fontSizeText;
+  addText("as your Flood Box checklist", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  yPos += 2*fontSizeText;
+  addText("For more information visit:", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  yPos += fontSizeText;
+  fill(highlightColour);
+  addText("nationalfloodforum.org.uk", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  fill(textColour);
   textFont(fontTitle);
   rBut.drawSelf();
   rBut.changeTxt("Restart");
