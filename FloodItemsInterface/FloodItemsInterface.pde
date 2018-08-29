@@ -551,8 +551,8 @@ void startScreen()
   else
     addText("Welcome", xMid, yLine, fontSizeHeader*2, CENTER, CENTER);    // display a plain background, with welcome text
   // draw button "click to Enter" just below Welcome
-  addText("This interactive display aims to raise awareness of flooding", xMid, yHeaderLine+fontSizeHeader+fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
-  addText("and the steps you can take to reduce its impact", xMid, yHeaderLine+fontSizeHeader+2*fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
+  addText("Are you prepared for a flood?", xMid, yHeaderLine+fontSizeHeader+fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
+  addText("Click below to find out more", xMid, yHeaderLine+fontSizeHeader+2*fontSizeSubTitle+ySmallItemGap, fontSizeSubTitle, CENTER, CENTER);
   enterBut = new Button("ENTER", xMid-(dbutWidth/2), yHeaderLine+3*fontSizeHeader, dbutWidth, dbutHeight, eBut); 
   // display a white band along the bottom of the screen, and display the fonts on this
   // Note LU logo must have same amount of space above and below as used by "U"
@@ -578,24 +578,24 @@ void nameEntry()
   fill(textColour);                                            // colour for all display fonts
   if (showBackgroundImages)
     image(sandbags, 0, 0);
-  addText("Flooding can have a huge, long-term ", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
+  addText("One in six UK homes are at risk", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
   lineY += fontSizeTitle;
-  addText("effect on your home and your life", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
+  addText("of flooding", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
   lineY += fontSizeTitle;
   textFont(fontText);
-  addText("Have you considered what you could do", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
+  addText("Make a personal flood kit to be prepared", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
   lineY += fontSizeSubTitle;
-  addText("to reduce the impact of flooding?", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
+  addText("before a flood happens", xSandbags, lineY, fontSizeSubTitle, LEFT, CENTER);
   lineY += 2*fontSizeTitle;
-  addText("Let's take a look ...", xSandbags, lineY, fontSizeText, LEFT, CENTER);
-  lineY += 3*fontSizeSubTitle;
+  addText("Let's get started ...", xSandbags, lineY, fontSizeText, LEFT, CENTER);
+  lineY += fontSizeText+ySmallItemGap;
   textFont(fontTitle);
-  addText("Would you like to tell us your name?", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
+  addText("What's your name?", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
   showSoftKeyboard(false);                                     // show keyboard without Enter key
   rBut.drawSelf();
   lBut.drawSelf();
   fill(highlightColour);
-  addText(PPname, xSandbags, lineY+fontSizeTitle+10, fontSizeTitle, LEFT, CENTER);
+  addText(PPname, xSandbags, lineY+fontSizeTitle+ySmallItemGap, fontSizeTitle, LEFT, CENTER);
   // draw a vertical line cursor where the input text is to go
   if (alternator(500)) line(xSandbags+textWidth(PPname), lineY+fontSizeTitle+10-fontSizeTitle/4, xSandbags+textWidth(PPname), lineY+fontSizeTitle+10+3*fontSizeTitle/4);
 
@@ -775,15 +775,17 @@ void transit1to2()
 
   addText("On the next screen, we'll", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
-  addText("ask you to select from these", xPos, yPos, fontSizeText, LEFT, CENTER);
+  addText("ask you to select from", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
-  addText("items to create your personal", xPos, yPos, fontSizeText, LEFT, CENTER);
+  addText("these items to create", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
-  addText("Flood Box, containing things", xPos, yPos, fontSizeText, LEFT, CENTER);
+  addText("your personal flood kit", xPos, yPos, fontSizeText, LEFT, CENTER);
+  yPos += 2*fontSizeText;
+  addText("Scan the things you'll need", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
-  addText("you'll need to be prepared", xPos, yPos, fontSizeText, LEFT, CENTER);
+  addText("and place them into the", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
-  addText("for a flood", xPos, yPos, fontSizeText, LEFT, CENTER);
+  addText("Grab Bag", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += 4*fontSizeText;
   image(floodBox, (xPos-floodBox.width)/2, yPos);
   textFont(fontTitle);
@@ -815,7 +817,7 @@ void transit1to2()
 void activity2()
 {
   fill(textColour);
-  addText("Scan into the Flood Box the items you think you will need", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
+  addText("Scan into the Grab Bag the items you think you will need", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
   //line(0, yLine, windowWidth, yLine);
   textFont(fontText);                                          // activate the main font
   addText("Box", 10, yLine+5, fontSizeScanBox, LEFT, TOP);
@@ -921,7 +923,7 @@ void report()
     if (a1Item < 0) a1Item = 0;
   }
   
-  addText("Items that I felt were important", xTitleLine, startL, fontSizeText, LEFT, TOP);
+  addText("Items that I felt were important:", xTitleLine, startL, fontSizeText, LEFT, TOP);
   startL += fontSizeText+10;
   if (once) println(startL);
   
@@ -934,7 +936,7 @@ void report()
       //println("i: " + i + "j: " + j + "num: " + itemNum + "len: " + a1Items.length);
       if (itemNum < a1Items.length)
       {        
-        addText(str(itemNum+1) + ": " + a1Items[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
+        addText(str(itemNum+1) + ". " + a1Items[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
         itemNum++;
       }
     }
@@ -943,7 +945,7 @@ void report()
 
   if (boxItems.length > 0)
   {
-    addText("My flood box items", xTitleLine, startL, fontSizeText, LEFT, TOP);
+    addText("My Grab Bag items:", xTitleLine, startL, fontSizeText, LEFT, TOP);
     startL += fontSizeText+10;
     
     itemNum = 0;
@@ -955,7 +957,7 @@ void report()
         //println("i: " + i + "j: " + j + "num: " + itemNum + "len: " + a1Items.length);
         if (itemNum < boxItems.length)
         {        
-          addText(str(itemNum+1) + ": " + boxItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
+          addText(str(itemNum+1) + ". " + boxItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
           itemNum++;
         }
       }
@@ -965,9 +967,9 @@ void report()
   
   if (bagItems.length > 0)
   {
-    addText("My emergency bag items", xTitleLine, startL, fontSizeText, LEFT, TOP);  
+    addText("My emergency bag items:", xTitleLine, startL, fontSizeText, LEFT, TOP);  
     startL += fontSizeText+10;
-    
+  
     itemNum = 0;
     if (once) println("len: " + bagItems.length + " | len/3: " + float(bagItems.length)/3);
     for (int i = 0; i < ceil(float(bagItems.length)/3); i++)
@@ -977,7 +979,7 @@ void report()
         //println("i: " + i + "j: " + j + "num: " + itemNum + "len: " + a1Items.length);
         if (itemNum < bagItems.length)
         {        
-          addText(str(itemNum+1) + ": " + bagItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
+          addText(str(itemNum+1) + ". " + bagItems[itemNum], xTitleLine+(j*(windowWidth/3)), startL+(i*(fontSizeText+ySmallItemGap)), fontSizeText, LEFT, TOP);  
           itemNum++;
         }
       }
@@ -1020,17 +1022,23 @@ void finished()
   int xPos = (showBackgroundImages ? xThumbsUpWR : xMid);
 
   // if background images are displayed the text is shown left justified to the right of the image
-  addText("Thanks for taking part" + (!PPname.equals("")?(" " + PPname):"") + "!", xMid, yPos, fontSizeTitle, CENTER, CENTER);
+  addText("Thanks for taking part" + (!PPname.equals("")?(", " + PPname):"") + "!", xMid, yPos, fontSizeTitle, CENTER, CENTER);
   yPos += 3*fontSizeTitle;
   textFont(fontText); //activate the main font
-  addText("Please take your printout to use", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  addText("Please take your printout to use as", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
   yPos += fontSizeText;
-  addText("as your Flood Box checklist", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  addText("your Grab Bag checklist", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
   yPos += 2*fontSizeText;
-  addText("For more information visit:", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  addText("For more information visit", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
   yPos += fontSizeText;
   fill(highlightColour);
   addText("nationalfloodforum.org.uk", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  fill(textColour);
+  yPos += fontSizeText;
+  addText("or call the Floodline on", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
+  yPos += fontSizeText;
+  fill(highlightColour);
+  addText("0345 988 1188", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
   fill(textColour);
   textFont(fontTitle);
   rBut.drawSelf();
@@ -1081,11 +1089,11 @@ void makeReport()
   report = append(report, "\n");  //new line; need as separate append so that saving as .txt factors new line too
   
   // list all the participant's typed items in the report
-  report = append(report, "Items I thought were important\n");
+  report = append(report, "Items I thought were important:\n");
   for (int i = 0; i < a1Items.length; i++)
   {
     if (!a1Items[i].equals(""))
-      report = append(report, (str(i+1) + ": " + a1Items[i] + "\n"));
+      report = append(report, (str(i+1) + ". " + a1Items[i] + "\n"));
   }
   
   //sort the scanned items from the crate into box/bag arrays
@@ -1111,24 +1119,27 @@ void makeReport()
   {
     //boxItems = sortItems(boxItems);
     report = append(report, "\n");  //new line; need as separate append so that saving as .txt factors new line too
-    report = append(report, "Flood Box Items\n");
+    report = append(report, "Grab Bag Items:\n");
     for (int i = 0; i < boxItems.length; i++)
-      report = append(report, (i+1 + ": " + boxItems[i] + "\n"));
+      report = append(report, (i+1 + ". " + boxItems[i] + "\n"));
   }
   
   // list all the scanned emergency bag items in the report
-  //if (bagItems.length > 0){
-  //  bagItems = sortItems(bagItems);
-  //  report = append(report, "\n");  //new line
-  //  report = append(report, "Emergency Bag Items\n");
-  //  for (int i = 0; i < bagItems.length; i++)
-  //    report = append(report, (i+1 + ": " + bagItems[i] + "\n"));
-  //}
+  if (bagItems.length > 0)
+  {
+    //bagItems = sortItems(bagItems);
+    report = append(report, "\n");  //new line
+    report = append(report, "Emergency Bag Items:\n");
+    for (int i = 0; i < bagItems.length; i++)
+      report = append(report, (i+1 + ". " + bagItems[i] + "\n"));
+  }
   
   // finish the report with a reference for more info
-  report = append(report, "\nFor more information visit https://nationalfloodforum.org.uk ");
-  report = append(report, "\n________________________________");
-  report = append(report, "\n\n\n\n\n\n\n\n________________________________\n"); //designed to cause the receipt to print longer, easier to cut
+  report = append(report, "\n");  //new line
+  report = append(report, "For more information visit https://nationalfloodforum.org.uk\n");
+  report = append(report, "or call the Floodline on 0345 988 1188\n");
+  report = append(report, "________________________________\n");
+  report = append(report, "\n\n\n\n\n\n\n________________________________\n"); //designed to cause the receipt to print longer, easier to cut
   //println(report.length);
 }
 
