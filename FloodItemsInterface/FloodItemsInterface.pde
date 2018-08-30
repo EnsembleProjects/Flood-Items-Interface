@@ -53,9 +53,9 @@ int dKeyWidth = 120;                                           // default soft k
 int dKeyHeight = 65;                                           // default soft key height
 
 color dBut = color(255,255,255,150);                           // white, semi-transparent
-color eBut = color(255,255,255,10);                           // white, less transparent
-color backgroundColour = color(249, 246, 244);  //(249, 244, 241);                 // 'pinkish' background colour
-color backgroundTransparent = color(249, 246, 244, 150);  //(249, 244, 241, 150);       // semi-transparent background colour
+color eBut = color(255,255,255,10);                            // white, less transparent
+color backgroundColour = color(249, 246, 244);                 // 'pinkish' background colour
+color backgroundTransparent = color(249, 246, 244, 100);       // semi-transparent background colour
 color textColour = color(33, 33, 33);                          // graphite colour of text
 color highlightColour = color(246, 79, 90);                    // cerise colour of highlighted text, or user input field
 
@@ -209,12 +209,14 @@ public class Item
     rect(infoX+strokeWeight, yLine+strokeWeight, xMid-2*strokeWeight, windowHeight-yLine-2*strokeWeight);
                                                                // cover the content of the scanbox, but not its outline
 
-    fill(textColour);                                          // text colour for desciption txt
     infoX += descripEdge;
-    addText(this.name, infoX+5, infoY+5, fontSizeItemName, LEFT, TOP);    // display name of enlarged item
+    fill(highlightColour);                                          // text colour for desciption txt
+    addText((this.container == 1? "In":"Discarded from") + " the Grab Bag:", infoX+5, infoY+5, fontSizeItemName, LEFT, TOP);    // display whether item is in the Grab Bag
+    fill(textColour);                                          // text colour for desciption txt
+    addText(this.name, infoX+5, infoY+5+fontSizeItemName, fontSizeItemName, LEFT, TOP);    // display name of enlarged item
     for (int i = 0; i < descrip.length; i++)                   // display description of enlarged item
     {
-      addText(descrip[i], infoX+5, infoY+fontSizeItemName+((i+1)*fontSizeItemDesc), fontSizeItemDesc, LEFT, TOP);
+      addText(descrip[i], infoX+5, infoY+2*fontSizeItemName+((i+1)*fontSizeItemDesc), fontSizeItemDesc, LEFT, TOP);
     }
                                                                // display Close button (to unenlarge item)
     close = new Button("Close", infoX+infoWidth-dbutWidth-10, infoY+10, dbutWidth, dbutHeight, dBut);
@@ -370,9 +372,9 @@ String tagID = "";
 
 void setup()
 {
-  //fullScreen();                                                // comment out to make the screen windowed
+  fullScreen();                                                // comment out to make the screen windowed
   //size(1300, 700);                                             // OR comment out to make full screen
-  size(1280, 800);                                             // for 10" touchscreen (on Pi)
+  //size(1280, 800);                                             // size of 10" touchscreen, but windowed
   windowWidth = width;
   windowHeight = height;
 
@@ -477,21 +479,21 @@ void setup()
   resetDefaults();
   
   // set up I/O ports by commenting out the lines you don't want
-  //boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
+  boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
   //*/boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows //*/
   //boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);        // these lines are for use on Mac
   //boxPort = new Serial(this, "/dev/tty.usbmodem14231", 9600);
-  //*/boxPort.buffer(10); //*/
-  //*/boxPort.clear(); //*/
+  boxPort.buffer(10); //*/
+  boxPort.clear(); //*/
   
-  //bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
+  bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
   //*/bagPort = new Serial(this, "COM4", 9600);                            // Windows //*/
   //bagPort = new Serial(this, "/dev/tty.usbmodem1A1221", 9600);         // Mac
   //bagPort = new Serial(this, "/dev/tty.usbmodem14211", 9600);
-  //*/bagPort.buffer(10); //*/
-  //*/bagPort.clear(); //*/
+  bagPort.buffer(10); //*/
+  bagPort.clear(); //*/
   
-  //printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
+  printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
   //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 
@@ -501,8 +503,8 @@ void setup()
 void initialiseData()
 {
   PPname = "";                                                 // clear the participant's name
-  //*/boxPort.clear();                                         // reset the serial input ports //*/
-  //*/bagPort.clear(); //*/
+  boxPort.clear();                                         // reset the serial input ports //*/
+  bagPort.clear(); //*/
   
   // clear the items entered by the participant
   a1Item = a1Items.length;
@@ -522,20 +524,20 @@ void initialiseData()
     crateItems[i].present = false;                             // item not scanned (for testing, set to true)
     crateItems[i].container = 0;                               // item not in a container (for testing, set to 1)
     // for test purposes, pretend item has been scanned into Box/Bag
-    if (i < 11 || i > 13)
-    {
-      crateItems[i].present = true;                            // item scanned
-      crateItems[i].container = 1;                             // item in Box container
-      crateItems[i].scanned(1);                                // place item randomly on screen
-      itemsPresent++;                                          // count number of items present
-    }
-    else
-    {
-      crateItems[i].present = true;                            // item scanned
-      crateItems[i].container = 2;                             // item in Bag container
-      crateItems[i].scanned(2);                                // place item randomly on screen
-      itemsPresent++;                                          // count number of items present
-    }
+    //if (i < 11 || i > 13)
+    //{
+    //  crateItems[i].present = true;                            // item scanned
+    //  crateItems[i].container = 1;                             // item in Box container
+    //  crateItems[i].scanned(1);                                // place item randomly on screen
+    //  itemsPresent++;                                          // count number of items present
+    //}
+    //else
+    //{
+    //  crateItems[i].present = true;                            // item scanned
+    //  crateItems[i].container = 2;                             // item in Bag container
+    //  crateItems[i].scanned(2);                                // place item randomly on screen
+    //  itemsPresent++;                                          // count number of items present
+    //}
   }
   enlargedContainer = 0;                                       // nothing is enlarged at the start
 }
@@ -636,7 +638,7 @@ void activity1()
   addText("What items do YOU think you should have ready", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
   addText("in case of a flood?", xTitleLine, yTitleLine+fontSizeTitle, fontSizeTitle, LEFT, CENTER);
   textFont(fontText);                                          // activate the main font
-  addText("List at least 5 below", xTitleLine, lineY, fontSizeSubTitle, LEFT, TOP);
+  addText("Can you think of 5 items?", xTitleLine, lineY, fontSizeSubTitle, LEFT, TOP);
   lineY += fontSizeSubTitle;
   addText("Press Enter to add the next item.  Press Backspace to edit the previous item.", xTitleLine, lineY, fontSizeText, LEFT, TOP);
   lineY += 2*yLargeItemGap;
@@ -764,7 +766,6 @@ void transit1to2()
 
   addText("Great work" + (!PPname.equals("")? (", " + PPname):"") + "!", xPos, yPos, fontSizeTitle, LEFT, CENTER);
   yPos += 2*fontSizeTitle;
-  //image(floodBox, windowWidth-250, yPos);
   textFont(fontText); //activate the main font
   addText("The crate beside you holds", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
@@ -786,7 +787,7 @@ void transit1to2()
   addText("and place them into the", xPos, yPos, fontSizeText, LEFT, CENTER);
   yPos += fontSizeText;
   addText("Grab Bag", xPos, yPos, fontSizeText, LEFT, CENTER);
-  yPos += 4*fontSizeText;
+  yPos += 3*fontSizeText;
   image(floodBox, (xPos-floodBox.width)/2, yPos);
   textFont(fontTitle);
   rBut.drawSelf();
@@ -808,8 +809,8 @@ void transit1to2()
   {
     inStr = "";
     latestScan = new ItemTag();                                // resets tagID before activity2
-    //*/boxPort.clear(); //*/
-    //*/bagPort.clear(); //*/
+    boxPort.clear(); //*/
+    bagPort.clear(); //*/
     state = State.ACTIVITY2;
   }
 }
@@ -820,7 +821,7 @@ void activity2()
   addText("Scan into the Grab Bag the items you think you will need", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
   //line(0, yLine, windowWidth, yLine);
   textFont(fontText);                                          // activate the main font
-  addText("Box", 10, yLine+5, fontSizeScanBox, LEFT, TOP);
+  addText("Grab Bag", 10, yLine+5, fontSizeScanBox, LEFT, TOP);
   line(xMid, yLine, xMid, windowHeight);
   addText("Discard ", windowWidth-5, yLine+5, fontSizeScanBox, RIGHT, TOP);
   textFont(fontTitle);
@@ -924,7 +925,7 @@ void report()
   }
   
   addText("Items that I felt were important:", xTitleLine, startL, fontSizeText, LEFT, TOP);
-  startL += fontSizeText+10;
+  startL += fontSizeText+ySmallItemGap;
   if (once) println(startL);
   
   int itemNum = 0;
@@ -941,12 +942,12 @@ void report()
       }
     }
   }
-  startL += ((fontSizeText+ySmallItemGap) * (ceil(float(a1Items.length)/3))) + 5; 
+  startL += ((fontSizeText+ySmallItemGap) * (ceil(float(a1Items.length)/3))) + 2*ySmallItemGap; 
 
   if (boxItems.length > 0)
   {
     addText("My Grab Bag items:", xTitleLine, startL, fontSizeText, LEFT, TOP);
-    startL += fontSizeText+10;
+    startL += fontSizeText+ySmallItemGap;
     
     itemNum = 0;
     if (once) println("len: " + boxItems.length + " | len/3: " + float(boxItems.length)/3);
@@ -962,13 +963,13 @@ void report()
         }
       }
     }
-    startL += ((fontSizeText+ySmallItemGap) * (ceil(float(boxItems.length)/3))) + 5;
+    startL += ((fontSizeText+2*ySmallItemGap) * (ceil(float(boxItems.length)/3))) + 2*ySmallItemGap;
   }
   
   if (bagItems.length > 0)
   {
     addText("My emergency bag items:", xTitleLine, startL, fontSizeText, LEFT, TOP);  
-    startL += fontSizeText+10;
+    startL += fontSizeText+ySmallItemGap;
   
     itemNum = 0;
     if (once) println("len: " + bagItems.length + " | len/3: " + float(bagItems.length)/3);
@@ -1085,7 +1086,13 @@ void draw()
 void makeReport()
 {
   // Title the report, and include the participant's name
-  report = append(report, "\n\n" + (PPname.equals("")?"My":(PPname+"'s")) + " Flood Preparation Checklist\n");
+  if (PPname.equals(""))
+    report = append(report, "\nMy Flood Preparation Checklist\n");
+  else
+  {
+    report = append(report, "\n" + PPname + "'s" );    // need two lines for header, so that text does not break onto new line in a weird place 
+    report = append(report, "\nFlood Preparation Checklist\n");  //new line; need as separate append so that saving as .txt factors new line too
+  }
   report = append(report, "\n");  //new line; need as separate append so that saving as .txt factors new line too
   
   // list all the participant's typed items in the report
@@ -1136,8 +1143,10 @@ void makeReport()
   
   // finish the report with a reference for more info
   report = append(report, "\n");  //new line
-  report = append(report, "For more information visit https://nationalfloodforum.org.uk\n");
-  report = append(report, "or call the Floodline on 0345 988 1188\n");
+  report = append(report, "For more information visit\n");
+  report = append(report, "nationalfloodforum.org.uk\n");
+  report = append(report, "or call the Floodline on\n");
+  report = append(report, "0345 988 1188\n");
   report = append(report, "________________________________\n");
   report = append(report, "\n\n\n\n\n\n\n________________________________\n"); //designed to cause the receipt to print longer, easier to cut
   //println(report.length);
@@ -1228,7 +1237,7 @@ void serialEvent(Serial port)
 void printTxt(String[] txt)
 {
   for (int line = 0; line < txt.length; line++)
-    ;//*/printPort.write(txt[line]);  //*/
+    printPort.write(txt[line]);  //*/
 }
   
 //following variables used exclusively in alternator() method, but need to be global
