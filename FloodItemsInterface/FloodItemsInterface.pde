@@ -53,7 +53,7 @@ int dKeyWidth = 120;                                           // default soft k
 int dKeyHeight = 65;                                           // default soft key height
 
 color dBut = color(255,255,255,150);                           // white, semi-transparent
-color eBut = color(255,255,255,10);                            // white, less transparent
+color eBut = color(255,255,255,10);                            // white, less transparent (used for Enter key on dark Welcome screen)
 color backgroundColour = color(249, 246, 244);                 // 'pinkish' background colour
 color backgroundTransparent = color(249, 246, 244, 100);       // semi-transparent background colour
 color textColour = color(33, 33, 33);                          // graphite colour of text
@@ -71,16 +71,16 @@ enum State {STARTSCREEN, NAMEENTRY, ACTIVITY1, TRANSIT1TO2, ACTIVITY2, REPORT, F
 
 State state = State.STARTSCREEN;                               // state machine powers up in STARTSCREEN state
 
-PImage floodBox;
-PImage welcome;
-PImage couchcat;
-PImage boots;
-PImage sandbags;
-PImage thumbsupwithoutrescue;
+PImage floodBox;                                               // image of flood box Grab Bag
+PImage welcome;                                                // artist graphic for Welcome page background
+PImage couchcat;                                               // artist graphic of woman with cat on couch
+PImage boots;                                                  // artist graphic of muddy boots
+PImage sandbags;                                               // artist graphic of sandbags
+PImage thumbsupwithoutrescue;                                  // artist graphic of children with flood box for final Thanks page
 //PImage emergBag;
-PImage LULogo;
-PImage EnsembleLogo;
-PImage EnvAgencyLogo;
+PImage LULogo;                                                 // Lancaster University logo for Welcome page
+PImage EnsembleLogo;                                           // Ensemble logo for Welcome page
+PImage EnvAgencyLogo;                                          // Environment Agency logo for Welcome page
 
 PFont fontTitle, fontText;                                     // fonts for Titles, and the rest of the text
 String PPname = "";                                            // name of the participant (PP), taken in nameEntry screen
@@ -88,7 +88,10 @@ int maxNameLength = 20;                                        // maximum length
 String[] a1Items = {};                                         // items the PP enters during activity 1
 int a1Item = 0;                                                // item within a1Items[] that PP is currently addressing
 String inStr = "";                                             // temp storage for input string (i.e. acts as input buffer)
-int itemsPresent = 0;                                          // number of items scanned in (and on screen)
+int itemsPresent = 0;                                          // number of items scanned (and on screen) in total
+int itemsInContainer[] = new int[2];                           // number of items in each container
+                                                               // the first container is the Flood Box (now called the Grab Bag)
+                                                               // the second container is the Emergency Bag (now used for Discard from the Grab Bag)
 
 // used internally to ease generation of final report
 String[] boxItems = {};                                        // items scanned into Box
@@ -98,8 +101,14 @@ String[] report = {};                                          // text to be sen
 // class, with attributes and methods, for each scannable item
 public class ItemTag
 {
-  public String id;
-  public int container;
+  public String id = "";
+  public int container = 0;
+  
+  public void clear()                                          // used to clear record of last item scanned
+  {
+    id = "";
+    container = 0;
+  }
 }
 
 public class Item
@@ -111,7 +120,6 @@ public class Item
   public PImage smallImg;
   public PImage largeImg;
   public String[] descrip;
-  public Button close;
   
   public boolean present = false;
   //public boolean held = false;
@@ -177,12 +185,24 @@ public class Item
       int imgX = 0;                                            // items in Box are drawn on the left hand side
       if (this.container == 2)
         imgX = xMid;                                           // items in Bag are drawn on the right hand side
+      int startX = imgX;
       fill(backgroundTransparent);                             // draw rectangle same shade as background but slightly transparent
       noStroke();
       rect(imgX+strokeWeight, yLine+strokeWeight, xMid-2*strokeWeight, windowHeight-yLine-2*strokeWeight);  //  so we can still see other scanned items in this container, but they're fainter
       if (largeImg.width < xMid)
-        imgX += (xMid - largeImg.width) / 2;                   // display image horizontally central
-      image(largeImg, imgX, yLine+fontSizeScanBox); //-10);    //change vertical position but be aware that moving up too far could overlap text
+        imgX += (xMid - largeImg.width) / 2;                   // display enlarged item's image horizontally central
+      image(largeImg, imgX, yLine+fontSizeScanBox);
+      if (itemsInContainer[this.container-1] > 1)              // if there are >1 items in the enlarged container
+      {                                                        //  enable scrolling through the enlarged items + descriptions
+        if (nextItemBut == null)                               // if it doesn't already exist, create the next-item button
+          nextItemBut = new Button(">", startX+xMid-dbutWidth/2-10, dButY, dbutWidth/2, dbutHeight, dBut);
+        if (prevItemBut == null)                               // if it doesn't already exist, create the previous-item button
+          prevItemBut = new Button("<", startX+10, dButY, dbutWidth/2, dbutHeight, dBut);
+        //textFont(fontTitle);                                   // (should use fontTitle, but won't notice for ">")
+        nextItemBut.drawSelf();                                // display the next/prev-item buttons
+        prevItemBut.drawSelf();
+        //textFont(fontText);
+      }
     }      
     else 
       image(smallImg, x, y);
@@ -194,7 +214,6 @@ public class Item
     enlargedContainer = this.container;
     drawImg();
     drawDescrip();
-    strokeWeight(strokeWeight);
   }
   
   public void drawDescrip()
@@ -210,17 +229,18 @@ public class Item
                                                                // cover the content of the scanbox, but not its outline
 
     infoX += descripEdge;
-    fill(highlightColour);                                          // text colour for desciption txt
+    fill(highlightColour);                                     // text colour to emphasise whether item in flood box (or not)
     addText((this.container == 1? "In":"Discarded from") + " the Grab Bag:", infoX+5, infoY+5, fontSizeItemName, LEFT, TOP);    // display whether item is in the Grab Bag
-    fill(textColour);                                          // text colour for desciption txt
+    fill(textColour);                                          // text colour for desciption text
     addText(this.name, infoX+5, infoY+5+fontSizeItemName, fontSizeItemName, LEFT, TOP);    // display name of enlarged item
     for (int i = 0; i < descrip.length; i++)                   // display description of enlarged item
-    {
       addText(descrip[i], infoX+5, infoY+2*fontSizeItemName+((i+1)*fontSizeItemDesc), fontSizeItemDesc, LEFT, TOP);
-    }
                                                                // display Close button (to unenlarge item)
-    close = new Button("Close", infoX+infoWidth-dbutWidth-10, infoY+10, dbutWidth, dbutHeight, dBut);
-    close.drawSelf();
+    if (closeBut == null)                                      // if it doesn't already exist, create the close-enlargement button
+      closeBut = new Button("Close", infoX+infoWidth-dbutWidth-10, infoY+10, dbutWidth, dbutHeight, dBut);
+    textFont(fontTitle);                                       // button text is in title font
+    closeBut.drawSelf();                                       // display the close-enlargement button
+    textFont(fontText);                                        // put font back to normal
   }
   
   public boolean clicked()
@@ -257,18 +277,18 @@ public class Item
     int myWid = this.smallImg.width - this.smallImg.width/8;
     int myHei = this.smallImg.height - this.smallImg.height/8;
     //println("New item at " + myX + "," + myY + " with width=" + myWid + " and height=" + myHei);
-    for (int i = 0; i < crateItems.length; i++)    // check for collision with all other scanned createItems
+    for (int i = 0; i < crateItems.length; i++)                // check for collision with all other scanned createItems
     {
       if (crateItems[i].present && crateItems[i].id != this.id)
       {
         //print(" | " + i + " is present");
-        int chalX = crateItems[i].x;    //(don't add overlap allowance to these objects)
+        int chalX = crateItems[i].x;                           // (don't add overlap allowance to these objects)
         int chalY = crateItems[i].y;
         int chalWid = crateItems[i].smallImg.width;
         int chalHei = crateItems[i].smallImg.height;
         //println("Existing item at " + chalX + "," + chalY + " with width=" + chalWid + " and height=" + chalHei);
-        if ((chalX + chalWid) >= myX && chalX <= (myX+myWid) &&         //if challenger's right (edge) >= my left AND challenger's left <= my right              
-            (chalY + chalHei) >= myY && chalY <= (myY+myHei))           //AND challenger's top >= my bottom AND challenger's bottom <= my top
+        if ((chalX + chalWid) >= myX && chalX <= (myX+myWid) &&    //if challenger's right (edge) >= my left AND challenger's left <= my right              
+            (chalY + chalHei) >= myY && chalY <= (myY+myHei))      //AND challenger's top >= my bottom AND challenger's bottom <= my top
         {
           //println("This does collide");
           return true;
@@ -282,9 +302,7 @@ public class Item
   
   public boolean mousePressedOver()
   {
-    int tempX = this.x;
-    int tempY = this.y;
-    if (mPressX >= tempX && mPressX <= tempX+smallImg.width && mPressY >= tempY && mPressY <= tempY+smallImg.height)
+    if (mPressX >= x && mPressX <= x+smallImg.width && mPressY >= y && mPressY <= y+smallImg.height)
       return true;
     else return false;
   }
@@ -294,6 +312,7 @@ public class Button
 {
   public String txt;
   public int x, y, wid, hei;
+  public int xtxt, ytxt, htxt;                                 // position and height of button text
   public color col;
   public PImage butImg;
   
@@ -307,17 +326,19 @@ public class Button
     this.col = c;
     this.butImg = loadImage("graphics/button.png");
     butImg.resize(w, h);
+    this.xtxt = x+(wid/2)-2;
+    this.ytxt = y+(hei*3/8);
+    this.htxt = hei/2;
   }
   
   public boolean clicked()
   {
-    if (mousePressedOver() && mousePressed && !clickAct)
+    if (mousePressed && mousePressedOver() && !clickAct)
     {  //ensures mutex
-      //println("! click");
       clickAct = true;
       return true;
     }
-    else return false;
+    return false;
   }
   
   public boolean mousePressedOver()
@@ -336,15 +357,13 @@ public class Button
 
   public void drawSelf()
   {
-    noStroke();
     image(butImg, x, y);                                       // display button image
     
     if (mouseHoverOver()) fill(highlightColour);               // colour of text when mouse is hovering over
     else fill(textColour);                                     // colour of text when mouse is not hovering over
-    addText(txt, x+(wid/2)-2, y+(hei*3/8), hei/2, CENTER, CENTER);    // text is 1/2 height of button, and vertically centred
+    addText(txt, xtxt, ytxt, htxt, CENTER, CENTER);            // display button text vertically centred
     
     fill(textColour);                                          // reset text colour back to normal
-    stroke(textColour);                                        // turn outline back on 
   }
   
   public void changeTxt(String t)                              // change text for this button
@@ -357,6 +376,7 @@ Item[] crateItems = new Item[numItems];                        // all the items 
 Button rBut;                                                   // right button, used for 'Done' or 'Next'
 Button lBut;                                                   // left button, used for 'Back'
 Button enterBut;                                               // Enter button on Welcome screen, used to get started
+Button nextItemBut, prevItemBut, closeBut;                     // next/previous-Item and close buttons, used on enlarged scanned item screen
 Button keyBut[];                                               // soft keyboard buttons
 String softKeyValue[][] = {{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "+", "Bksp"}, 
                               {"a", "s", "d", "f", "g", "h", "j", "k", "l", "-"}, 
@@ -367,7 +387,7 @@ String softKeyValue[][] = {{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "+
 Serial bagPort;                                                // input from Bag scanner
 Serial boxPort;                                                // input from Box scanner
 Serial printPort;                                              // output to printer
-ItemTag latestScan = new ItemTag();
+ItemTag latestScan = new ItemTag();                            // details of the last item scanned
 String tagID = "";
 
 void setup()
@@ -444,6 +464,7 @@ void setup()
   dButY = windowHeight-dbutHeight-10;
   rBut = new Button("Next", dButX, dButY, dbutWidth, dbutHeight, dBut);
   lBut = new Button("Back", 10, dButY, dbutWidth, dbutHeight, dBut);
+  enterBut = new Button("ENTER", xMid-(dbutWidth/2), yHeaderLine+3*fontSizeHeader, dbutWidth, dbutHeight, eBut); 
   // preload the soft keyboard
   loadSoftKeyboard();
     
@@ -479,21 +500,21 @@ void setup()
   resetDefaults();
   
   // set up I/O ports by commenting out the lines you don't want
-  boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
+  //*/boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
   //*/boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows //*/
   //boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);        // these lines are for use on Mac
   //boxPort = new Serial(this, "/dev/tty.usbmodem14231", 9600);
-  boxPort.buffer(10); //*/
-  boxPort.clear(); //*/
+  //*/boxPort.buffer(10); //*/
+  //*/boxPort.clear(); //*/
   
-  bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
+  //*/bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
   //*/bagPort = new Serial(this, "COM4", 9600);                            // Windows //*/
   //bagPort = new Serial(this, "/dev/tty.usbmodem1A1221", 9600);         // Mac
   //bagPort = new Serial(this, "/dev/tty.usbmodem14211", 9600);
-  bagPort.buffer(10); //*/
-  bagPort.clear(); //*/
+  //*/bagPort.buffer(10); //*/
+  //*/bagPort.clear(); //*/
   
-  printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
+  //*/printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
   //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 
@@ -503,8 +524,8 @@ void setup()
 void initialiseData()
 {
   PPname = "";                                                 // clear the participant's name
-  boxPort.clear();                                         // reset the serial input ports //*/
-  bagPort.clear(); //*/
+  //*/boxPort.clear();                                         // reset the serial input ports //*/
+  //*/bagPort.clear(); //*/
   
   // clear the items entered by the participant
   a1Item = a1Items.length;
@@ -516,47 +537,49 @@ void initialiseData()
   }
   inStr = "";
   itemsPresent = 0;                                            // no items scanned yet
+  itemsInContainer[0] = 0;                                     // no items in either container
+  itemsInContainer[1] = 0;
   // clear the items from the Flood Box, the Flood Bag, and the Report (first two are used by the report)
   clearReport();
-  // mark all crate items as not scanned and not in the Box/Bag
+  // mark all crate items as not scanned and not in any container
   for (int i = 0; i < crateItems.length; i++)
   {
     crateItems[i].present = false;                             // item not scanned (for testing, set to true)
     crateItems[i].container = 0;                               // item not in a container (for testing, set to 1)
     // for test purposes, pretend item has been scanned into Box/Bag
-    //if (i < 11 || i > 13)
-    //{
-    //  crateItems[i].present = true;                            // item scanned
-    //  crateItems[i].container = 1;                             // item in Box container
-    //  crateItems[i].scanned(1);                                // place item randomly on screen
-    //  itemsPresent++;                                          // count number of items present
-    //}
-    //else
-    //{
-    //  crateItems[i].present = true;                            // item scanned
-    //  crateItems[i].container = 2;                             // item in Bag container
-    //  crateItems[i].scanned(2);                                // place item randomly on screen
-    //  itemsPresent++;                                          // count number of items present
-    //}
+    if (i <= 11 || i >= 13)
+    {
+      crateItems[i].present = true;                            // item scanned
+      crateItems[i].container = 1;                             // item in Box container
+      crateItems[i].scanned(1);                                // place item randomly on screen
+      itemsPresent++;                                          // count number of items present
+      itemsInContainer[0]++;                                   // count number of items in Box container
+    }
+    else
+    {
+      crateItems[i].present = true;                            // item scanned
+      crateItems[i].container = 2;                             // item in Bag container
+      crateItems[i].scanned(2);                                // place item randomly on screen
+      itemsPresent++;                                          // count number of items present
+      itemsInContainer[1]++;                                   // count number of items in Bag container
+    }
   }
   enlargedContainer = 0;                                       // nothing is enlarged at the start
+  println("total items present=" + itemsPresent + ", items in Box=" + itemsInContainer[0] + ", items in Discard=" + itemsInContainer[1]);
 }
 
 void startScreen()
 {
   //if (mousePressed) clickAct = true;                         // prevents buttons on next screen activating
-  //int lineY = yHeaderLine;
 
   fill(textColour);                                            // colour for all display fonts
   if (showBackgroundImages)
     image(welcome, 0, 0);                                      // display the flood picture and welcome text
   else
     addText("Welcome", xMid, yLine, fontSizeHeader*2, CENTER, CENTER);    // display a plain background, with welcome text
-  // draw button "click to Enter" just below Welcome
   addText("Are you prepared for a flood?", xMid, yHeaderLine+fontSizeHeader+fontSizeSubTitle, fontSizeSubTitle, CENTER, CENTER);
   addText("Click below to find out more", xMid, yHeaderLine+fontSizeHeader+2*fontSizeSubTitle+ySmallItemGap, fontSizeSubTitle, CENTER, CENTER);
-  enterBut = new Button("ENTER", xMid-(dbutWidth/2), yHeaderLine+3*fontSizeHeader, dbutWidth, dbutHeight, eBut); 
-  // display a white band along the bottom of the screen, and display the fonts on this
+  // display a slightly transparent white band along the bottom of the screen, and display the fonts on this
   // Note LU logo must have same amount of space above and below as used by "U"
   fill(255, 255, 255, 190);                                    // white, with some transparency
   rect(0, windowHeight-100, windowWidth, 100);
@@ -565,14 +588,13 @@ void startScreen()
   image(EnsembleLogo, xMid-EnsembleLogo.width/2, windowHeight-90);
   image(EnvAgencyLogo, windowWidth*4/5-EnvAgencyLogo.width, windowHeight-75);
   enterBut.drawSelf();                                         // display enter button
-  if (enterBut.clicked() || keyCode == ENTER)
-  {
+  if (enterBut.clicked() || keyCode == ENTER)                  // when Enter pressed
+  {                                                            // go to next screen
     state = State.NAMEENTRY;
     keyCode = ' ';                                             // Enter has been dealt with, so clear it
   }
 }
 
-int count = 0;
 void nameEntry()
 {
   int lineY = yTitleLine;
@@ -598,8 +620,9 @@ void nameEntry()
   lBut.drawSelf();
   fill(highlightColour);
   addText(PPname, xSandbags, lineY+fontSizeTitle+ySmallItemGap, fontSizeTitle, LEFT, CENTER);
-  // draw a vertical line cursor where the input text is to go
-  if (alternator(500)) line(xSandbags+textWidth(PPname), lineY+fontSizeTitle+10-fontSizeTitle/4, xSandbags+textWidth(PPname), lineY+fontSizeTitle+10+3*fontSizeTitle/4);
+  // flash a vertical line cursor where the input text is to go
+  if (alternator(500))
+    line(xSandbags+textWidth(PPname), lineY+ySmallItemGap+fontSizeTitle/2+ySmallItemGap, xSandbags+textWidth(PPname), lineY+fontSizeTitle+ySmallItemGap+3*fontSizeTitle/4);
 
   handleSoftKeyboard(false);                                   // handle input from soft keyboard
 
@@ -608,16 +631,16 @@ void nameEntry()
   PPname = inStr;
   
   if (lBut.clicked())                                          // if Back clicked
+  {
     state = State.STARTSCREEN;                                 // go to previous screen
-  if (rBut.clicked() || keyCode == ENTER)                      // this line can be used (instead of the one below) so that Enter 
-                                                               // can be used after typing name, rather than having to click Done.
-  //if (rBut.clicked())
-  {                                                            // if Next clicked
+  }
+  if (rBut.clicked() || keyCode == ENTER)                      // Enter can be used after typing name, rather than having to click Next
+  {                                                            // if Enter pressed or Next clicked
     if (a1Items.length > 0) inStr = a1Items[a1Item];
     else inStr = "";
-    state = State.ACTIVITY1;                                   // go to next screen
     softKey = ' ';
     keyCode = ' ';                                             // Enter has been dealt with, so clear it
+    state = State.ACTIVITY1;                                   // go to next screen
   }
 }
 
@@ -637,6 +660,9 @@ void activity1()
 
   addText("What items do YOU think you should have ready", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
   addText("in case of a flood?", xTitleLine, yTitleLine+fontSizeTitle, fontSizeTitle, LEFT, CENTER);
+  showSoftKeyboard(true);                                      // show keyboard with Enter key
+  rBut.drawSelf();                                             // display buttons
+  lBut.drawSelf();
   textFont(fontText);                                          // activate the main font
   addText("Can you think of 5 items?", xTitleLine, lineY, fontSizeSubTitle, LEFT, TOP);
   lineY += fontSizeSubTitle;
@@ -644,17 +670,8 @@ void activity1()
   lineY += 2*yLargeItemGap;
   startLineY = lineY;
 
-  textFont(fontTitle);
-  showSoftKeyboard(true);                                      // show keyboard with Enter key
-
-  rBut.drawSelf();                                             // display buttons
-  lBut.drawSelf();
-  textFont(fontText);                                          // activate the main font
-
   if (keyCode == ENTER || softKey == ENTER)                    // ensure no more than 15 items
   {
-    //if (keyCode == ENTER) println("Keyboard Enter");
-    //if (softKey == ENTER) println("softKey Enter");
     if ((a1Items.length < 15) && (inStr.length() > 0))
     {
       //ensure can only move to next line once something has been entered on this line
@@ -669,8 +686,6 @@ void activity1()
   //println("a1Item: " + a1Item + " | arrayLen: " + a1Items.length);
   if (keyCode == BACKSPACE || softKey == BACKSPACE)
   {
-    //if (keyCode == BACKSPACE) println("Keyboard Backspace");
-    //if (softKey == BACKSPACE) println("softKey Backspace");
     if ((a1Item > 0) && backAct)                               // if backspace needs to go to previous item
     {
       //print("backAct");
@@ -694,7 +709,7 @@ void activity1()
       addText("Press Backspace to edit the previous item", xPromptActivity1, lineY+yLargeItemGap, fontSizeText, LEFT, BOTTOM);
   }
   if (a1Items.length >= 3) tutorial = false;                   // removes tutorial pointers once user has entered 3 items
-  //else tutorial = true;                                      //restores tutorial if user reduces number of items
+  //else tutorial = true;                                      // restores tutorial if user reduces number of items
   if (a1Items.length == 5 && !a1Items[a1Item].equals(""))
   {
     // display prompt for more items, aligned with (and just above) last item entered
@@ -729,7 +744,7 @@ void activity1()
     }
     addText(a1Items[i], lineX, lineY+(i*yLargeItemGap), fontSizeInputActivity1, LEFT, BOTTOM);
   }
-  // display vertical line as cursor for next input area
+  // flash vertical line as cursor for next input area
   if (alternator(500))
     line(lineX+textWidth(a1Items[a1Item])+inputLineGap, lineY+(a1Item*yLargeItemGap)-fontSizeInputActivity1-ySmallItemGap, lineX+textWidth(a1Items[a1Item])+inputLineGap, lineY+(a1Item*yLargeItemGap));
 
@@ -808,9 +823,9 @@ void transit1to2()
   if (rBut.clicked())
   {
     inStr = "";
-    latestScan = new ItemTag();                                // resets tagID before activity2
-    boxPort.clear(); //*/
-    bagPort.clear(); //*/
+    latestScan.clear();//latestScan = new ItemTag();                                // resets tagID before activity2
+    //*/boxPort.clear(); //*/
+    //*/bagPort.clear(); //*/
     state = State.ACTIVITY2;
   }
 }
@@ -819,66 +834,112 @@ void activity2()
 {
   fill(textColour);
   addText("Scan into the Grab Bag the items you think you will need", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
-  //line(0, yLine, windowWidth, yLine);
-  textFont(fontText);                                          // activate the main font
-  addText("Grab Bag", 10, yLine+5, fontSizeScanBox, LEFT, TOP);
-  line(xMid, yLine, xMid, windowHeight);
-  addText("Discard ", windowWidth-5, yLine+5, fontSizeScanBox, RIGHT, TOP);
-  textFont(fontTitle);
   rBut.changeTxt("Done");
   if (enlargedContainer == 0)                                  // display Next/Back buttons only when no items are enlarged
   {
-    rBut.drawSelf();
+    if (itemsInContainer[0] > 0)                               // display Next button only when at least one item scanned into Flood Box
+      rBut.drawSelf();
     lBut.drawSelf();
   }
   textFont(fontText);
+  addText("Grab Bag", 10, yLine+5, fontSizeScanBox, LEFT, TOP);
+  line(xMid, yLine, xMid, windowHeight);
+  addText("Discard ", windowWidth-5, yLine+5, fontSizeScanBox, RIGHT, TOP);
 
-  for (int i = 0; i < crateItems.length; i++)
+  // handle latest scanned item (if any)
+  if (!latestScan.id.equals(""))
   {
-    if (crateItems[i].id.equals(latestScan.id) && (!crateItems[i].present || crateItems[i].container != latestScan.container))
-    {  //checks key against item IDs, then their presence OR scan into diff container
-      //println("making present");
-      crateItems[i].scanned(latestScan.container);             // parameter = container
-      itemsPresent++;
-      for (int j = 0; j < crateItems.length; j++)
-      {
-        if (j != i) crateItems[j].enlarged = false;            // resets the enlargement of all but the clicked one
+    for (int i = 0; i < crateItems.length; i++)
+    {
+      if (crateItems[i].id.equals(latestScan.id) && (!crateItems[i].present || crateItems[i].container != latestScan.container))
+      {  //checks key against item IDs, then their presence OR scan into diff container
+        //println("making present");
+        if (crateItems[i].container > 0)                         // if item had previously been scanned
+          itemsInContainer[crateItems[i].container]--;           //  reduce the count for where it used to be
+        else                                                     // if item has not been scanned before
+          itemsPresent++;                                        //  increment the count of total items scanned
+        crateItems[i].scanned(latestScan.container);             // scan item into container 1 or 2, in a random, non-overlapping screen position
+        itemsInContainer[latestScan.container-1]++;              // increase the count for the new container
+        for (int j = 0; j < crateItems.length; j++)
+        {
+          if (j != i) crateItems[j].enlarged = false;            // reset the enlargement of all items but the scanned one
+        }
+        crateItems[i].enlarge();                                 // enlarge scanned item
+        latestScan.clear();                                      // dealt with latest scan, so clear it
+        //println("enlarge item " + i);
+        println("total items present=" + itemsPresent + ", items in Box=" + itemsInContainer[0] + ", items in Discard=" + itemsInContainer[1]);
+        break;
       }
-      crateItems[i].enlarge();
-      //println("enlarge item " + i);
-      break;
     }
   }   
   
+  // display all items, and handle clicks
   for (int i = 0; i < crateItems.length; i++)
   {
     if (crateItems[i].present == true)
     {
-      if (crateItems[i].clicked())
+      if (!crateItems[i].enlarged && crateItems[i].clicked())  // clicked on an item that is not enlarged
       {
         for (int j = 0; j < crateItems.length; j++)
         {
           if (j != i) crateItems[j].enlarged = false;          // reset the enlargement of all but the clicked item
         }
-        crateItems[i].enlarge();
+        crateItems[i].enlarge();                               // enlarge clicked item
         //println("enlarge item " + i);
       }
-      else if (crateItems[i].enlarged && crateItems[i].close.clicked())
+
+      if (crateItems[i].enlarged && closeBut.clicked())        // clicked to Close the enlarged item
       {
-        crateItems[i].unenlarge();
+        crateItems[i].unenlarge();                             // set nothing enlarged
+        nextItemBut = null;                                    // and remove the next/prev-item and close buttons used with enlargements
+        prevItemBut = null;
+        closeBut = null;
         //println("unenlarge item " + i);
       }
-      crateItems[i].drawImg();
+      else if (crateItems[i].enlarged && (nextItemBut != null && nextItemBut.clicked()) && (itemsInContainer[crateItems[i].container-1]>1))
+      {                                                        // clicked to enlarge next item in same container 
+        //println("> clicked");
+        for (int j = i+1; j != i; j++)
+        {
+          if (j >= crateItems.length) j = 0;
+          if (crateItems[j].container == crateItems[i].container) // find next item in this container
+          {
+            crateItems[i].enlarged = false;                    // current item is no longer enlarged
+            crateItems[j].enlarged = true;                     // next item is enlarged instead
+            break;                                             // break out of inner for loop, as we've found the next item
+          }
+        }
+      }
+      else if (crateItems[i].enlarged && (prevItemBut != null && prevItemBut.clicked()) && (itemsInContainer[crateItems[i].container-1]>1))
+      {                                                        // clicked to enlarge previous item in same container
+        //println("< clicked");
+        for (int j = i-1; j != i; j--)
+        {
+          if (j < 0) j = crateItems.length-1;
+          if (crateItems[j].container == crateItems[i].container) // find previous item in this container
+          {
+            crateItems[i].enlarged = false;                    // current item is no longer enlarged
+            crateItems[j].enlarged = true;                     // previous item is enlarged instead
+            break;                                             // break out of inner for loop, as we've found the previous item
+          }
+        }
+      }
+      if (!crateItems[i].enlarged)                             // display unenlarged item
+        crateItems[i].drawImg();
     }
   }
+
+  // display any enlarged item on top of all the unenlarged items
   for (int i = 0; i < crateItems.length; i++)
-    if (crateItems[i].enlarged) 
+    if (crateItems[i].enlarged)
+    {
       crateItems[i].enlarge();                                 // display enlarged item on top of all the other items
-  
+      break;                                                   // there is at most one enlarged item
+    }
+
+  // can go to previous avtivity only when nothing is enlarged
   if (lBut.clicked() && (enlargedContainer == 0))
   {
-    for (int i = 0; i < crateItems.length; i++) 
-      crateItems[i].enlarged = false;                          // resets the enlargement of all
     a1Item = a1Items.length - 1;
     if (a1Item >= 0)
       inStr = a1Items[a1Item];
@@ -888,37 +949,35 @@ void activity2()
       a1Item = 0;
     }
     rBut.changeTxt("Next");
-    state = State.TRANSIT1TO2; //State.ACTIVITY1;
-  }  
-  if (rBut.clicked() && (enlargedContainer == 0) && itemsPresent > 0) //*/
+    state = State.TRANSIT1TO2;
+  }
+  
+  // can go to next activity only when nothing is enlarged and there is at least one item scanned into Flood Box
+  if (rBut.clicked() && (enlargedContainer == 0) && itemsInContainer[0] > 0) //*/
   {
-    for (int i = 0; i < crateItems.length; i++) 
-      crateItems[i].enlarged = false;                          // resets the enlargement of all
     inStr = "";
     state = State.REPORT;
   }
 }
 
 boolean once = false;                                          // for debug print
-
-//boolean repSaved = false;                                    // true once the report has been saved
 void report()
 {
   int startL = ySubTitleLine;
 
   fill(textColour);
   addText(((!PPname.equals("")?(PPname + "'s"):"My") + " Flood Preparation Checklist"), xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
-  //line(0, yLine, windowWidth, yLine);
   rBut.drawSelf();
   lBut.drawSelf();
   
   textFont(fontText);
+  // generate the report to be printed
   if (report.length == 0)
   {
     if ((a1Item >= 0) && (a1Items.length != 0) && (a1Items[a1Item].equals("")))
-    {
+    {                                                          // if last item of user input is empty
       a1Item--;
-      a1Items = shorten(a1Items);                                // remove the empty field
+      a1Items = shorten(a1Items);                              // remove the empty field
     }
     makeReport();
     if (a1Item < 0) a1Item = 0;
@@ -991,11 +1050,13 @@ void report()
   if (lBut.clicked())
   {
     clearReport();                                             // clear the report data in case the user changes the scanned items
-    state = State.ACTIVITY2;
+    state = State.ACTIVITY2;                                   // go to previous activity
   }
+  
   if (rBut.clicked())
   {
     //println("SaveClick");
+    // identify the filename for the report
     int fNum = 1;
     //println(sketchPath("reports/report" + str(fNum) + ".txt"));
     File f = new File(sketchPath("reports/report" + str(fNum) + ".txt"));
@@ -1006,10 +1067,11 @@ void report()
       fNum++;
       f = new File(sketchPath("reports/report" + str(fNum) + ".txt"));
     }
+    // save the report and print it
     //println("saving as report" + fNum + ".txt");
     saveStrings(sketchPath("reports/report" + str(fNum) + ".txt"), report);
     printTxt(report);
-    state = State.FINISHED;
+    state = State.FINISHED;                                    // go to Thanks screen
   }
 }
 
@@ -1025,6 +1087,8 @@ void finished()
   // if background images are displayed the text is shown left justified to the right of the image
   addText("Thanks for taking part" + (!PPname.equals("")?(", " + PPname):"") + "!", xMid, yPos, fontSizeTitle, CENTER, CENTER);
   yPos += 3*fontSizeTitle;
+  rBut.drawSelf();
+  rBut.changeTxt("Restart");
   textFont(fontText); //activate the main font
   addText("Please take your printout to use as", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
   yPos += fontSizeText;
@@ -1040,10 +1104,6 @@ void finished()
   yPos += fontSizeText;
   fill(highlightColour);
   addText("0345 988 1188", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
-  fill(textColour);
-  textFont(fontTitle);
-  rBut.drawSelf();
-  rBut.changeTxt("Restart");
   if (rBut.clicked())
   {
     rBut.changeTxt("Next");
@@ -1079,7 +1139,8 @@ void draw()
       finished();
       break;
   }
-  //delay(30);
+  mousePressed = false;        // this variable would otherwise be set for several loops, when we want it just once
+  //delay(2);
 }
 
 // create the text for the printable reports
@@ -1091,9 +1152,9 @@ void makeReport()
   else
   {
     report = append(report, "\n" + PPname + "'s" );    // need two lines for header, so that text does not break onto new line in a weird place 
-    report = append(report, "\nFlood Preparation Checklist\n");  //new line; need as separate append so that saving as .txt factors new line too
+    report = append(report, "\nFlood Preparation Checklist\n");
   }
-  report = append(report, "\n");  //new line; need as separate append so that saving as .txt factors new line too
+  report = append(report, "\n");                      // new line; need as separate append so that saving as .txt factors new line too
   
   // list all the participant's typed items in the report
   report = append(report, "Items I thought were important:\n");
@@ -1112,7 +1173,7 @@ void makeReport()
       boxItems = append(boxItems, crateItems[i].name);
     }
     // we are no longer using an Emergency Bag, so don't do this step
-    // (Note: the Bag scanner is now used to discard from the Box)
+    // (Note: the Bag scanner is now used to Discard from the Box)
     //if (crateItems[i].present && crateItems[i].container == 2)
     //{
     //  //println("bagAdd: " + crateItems[i].name);
@@ -1142,7 +1203,7 @@ void makeReport()
   }
   
   // finish the report with a reference for more info
-  report = append(report, "\n");  //new line
+  report = append(report, "\n");
   report = append(report, "For more information visit\n");
   report = append(report, "nationalfloodforum.org.uk\n");
   report = append(report, "or call the Floodline on\n");
@@ -1221,7 +1282,7 @@ void resetDefaults()
 {
   background(backgroundColour);                                // colour of background
   stroke(textColour);                                          // colour of line and text
-  textFont(fontTitle);                                         // activate the title font
+  textFont(fontTitle);                                         // activate the title font for the start of each screen
 }
 
 void serialEvent(Serial port)
@@ -1231,13 +1292,13 @@ void serialEvent(Serial port)
   if (port == boxPort) latestScan.container = 1;
   else latestScan.container = 2;
   port.clear();
-  //println(latestScan.container);
+  //println("Scanned into container " + latestScan.container);
 }
 
 void printTxt(String[] txt)
 {
   for (int line = 0; line < txt.length; line++)
-    printPort.write(txt[line]);  //*/
+    ;//*/printPort.write(txt[line]);  //*/
 }
   
 //following variables used exclusively in alternator() method, but need to be global
@@ -1264,7 +1325,6 @@ void keyPressed()
     if (inStr.length() > 0) inStr = inStr.substring(0, inStr.length() - 1);
     else backAct = true;                                       // corrects if key IS BACKSPACE with a blank inStr
   }
-  //else if ((keyCode >= ' ' && keyCode < 127) || keyCode == 222)
   else if (key >= ' ' && key <= '~')
   {
     //should allow all numbers and letters, space, dash, comma, apostrophe
@@ -1274,12 +1334,13 @@ void keyPressed()
   //print(inStr);
 }
 
+// loads soft keyboard, ready for use
 void loadSoftKeyboard()
 {
   // set button size and position to scale with screen size
   int keyButWidth = (windowWidth - 2*keyboardGap) / (softKeyValue[0].length);  // leave gap at each side of keyboard
   int keyButHeight = keyButWidth * dKeyHeight / dKeyWidth;
-  int lineX = keyboardGap;                                     // calculate start xPosition of keyboard;
+  int lineX = keyboardGap;                                     // get start x,y positions of keyboard;
   int lineY = keyboardLine;
   keyBut = new Button[softKeyValue.length * softKeyValue[0].length];
   
@@ -1287,11 +1348,11 @@ void loadSoftKeyboard()
   {
     for (int col = 0; col < softKeyValue[row].length; col++, i++)
     {
-      if (softKeyValue[row][col].equals(" "))
+      if (softKeyValue[row][col].equals(" "))                  // space bar is 6* wider than other keys
         keyBut[i] = new Button(softKeyValue[row][col], lineX+(keyButWidth*col), lineY, 6*keyButWidth, keyButHeight, dBut);
-      else if (softKeyValue[row][col].equals("Enter"))
+      else if (softKeyValue[row][col].equals("Enter"))         // Enter is 2* wider than other keys
         keyBut[i] = new Button(softKeyValue[row][col], lineX+(keyButWidth*col), lineY, 2*keyButWidth, keyButHeight, dBut);
-      else if (row == softKeyValue.length-1)
+      else if (row == softKeyValue.length-1)                   // in case there are any buttons on same row after space bar
         keyBut[i] = new Button(softKeyValue[row][col], lineX+(6*keyButWidth)+(keyButWidth*(col-1)), lineY, keyButWidth, keyButHeight, dBut);
       else
         keyBut[i] = new Button(softKeyValue[row][col], lineX+(keyButWidth*col), lineY, keyButWidth, keyButHeight, dBut);
@@ -1301,18 +1362,23 @@ void loadSoftKeyboard()
   }
 }
 
+// displays soft keyboard
+// param1 = true if Enter key is to be displayed
 void showSoftKeyboard(boolean showEnter)
 {
   for (int row = 0, i = 0; row < softKeyValue.length; row++, i++)
   {
     for (int col = 0; col < softKeyValue[row].length; col++, i++)
     {
-      if (!softKeyValue[row][col].equals("Enter") || showEnter)
+      if (!softKeyValue[row][col].equals("Enter") || showEnter)  // display Enter key only if asked to do so
         keyBut[i].drawSelf();
     }
   }
 }
 
+// handles input from soft keyboard
+// alpha keys are appended to inStr
+// returns ENTER, BACKSPACE or ' '
 char handleSoftKeyboard(boolean showEnter)
 {
   char charPressed = ' ';
