@@ -154,15 +154,20 @@ public class Item
   public void scanned(int c)
   {
     present = true;
+    if (enlargedContainer != c)                                  // if now enlarging a different container, erase the next/prev-item and close buttons
+    {                                                            // so they can be redrawn on the other side of the screen
+      closeBut = null;
+      nextItemBut = null;
+      prevItemBut = null;
+    }
     this.container = c;
-    enlargedContainer = c;                                     // remember which container has an enlarged item
     int minX, maxX;
     if (this.container == 1)
     {
       minX = 0;
       maxX = xMid - smallImg.width;
     }
-    else 
+    else
     {
       minX = xMid;
       maxX = windowWidth - smallImg.width;
@@ -203,8 +208,8 @@ public class Item
         prevItemBut.drawSelf();
         //textFont(fontText);
       }
-    }      
-    else 
+    }
+    else
       image(smallImg, x, y);
   }
   
@@ -500,21 +505,21 @@ void setup()
   resetDefaults();
   
   // set up I/O ports by commenting out the lines you don't want
-  //*/boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
+  boxPort = new Serial(this, "/dev/ttyACM0", 9600);                    // this line is for use on Pi
   //*/boxPort = new Serial(this, "COM5", 9600);                            // this line is for use on Windows //*/
   //boxPort = new Serial(this, "/dev/tty.usbmodem1A12421", 9600);        // these lines are for use on Mac
   //boxPort = new Serial(this, "/dev/tty.usbmodem14231", 9600);
-  //*/boxPort.buffer(10); //*/
-  //*/boxPort.clear(); //*/
+  boxPort.buffer(10); //*/
+  boxPort.clear(); //*/
   
-  //*/bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
+  bagPort = new Serial(this, "/dev/ttyACM1", 9600);                    // Pi
   //*/bagPort = new Serial(this, "COM4", 9600);                            // Windows //*/
   //bagPort = new Serial(this, "/dev/tty.usbmodem1A1221", 9600);         // Mac
   //bagPort = new Serial(this, "/dev/tty.usbmodem14211", 9600);
-  //*/bagPort.buffer(10); //*/
-  //*/bagPort.clear(); //*/
+  bagPort.buffer(10); //*/
+  bagPort.clear(); //*/
   
-  //*/printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
+  printPort = new Serial(this, "/dev/ttyUSB0", 19200);                 // Pi
   //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 
@@ -524,8 +529,8 @@ void setup()
 void initialiseData()
 {
   PPname = "";                                                 // clear the participant's name
-  //*/boxPort.clear();                                         // reset the serial input ports //*/
-  //*/bagPort.clear(); //*/
+  boxPort.clear();                                         // reset the serial input ports //*/
+  bagPort.clear(); //*/
   
   // clear the items entered by the participant
   a1Item = a1Items.length;
@@ -547,22 +552,22 @@ void initialiseData()
     crateItems[i].present = false;                             // item not scanned (for testing, set to true)
     crateItems[i].container = 0;                               // item not in a container (for testing, set to 1)
     // for test purposes, pretend item has been scanned into Box/Bag
-    if (i <= 11 || i >= 13)
-    {
-      crateItems[i].present = true;                            // item scanned
-      crateItems[i].container = 1;                             // item in Box container
-      crateItems[i].scanned(1);                                // place item randomly on screen
-      itemsPresent++;                                          // count number of items present
-      itemsInContainer[0]++;                                   // count number of items in Box container
-    }
-    else
-    {
-      crateItems[i].present = true;                            // item scanned
-      crateItems[i].container = 2;                             // item in Bag container
-      crateItems[i].scanned(2);                                // place item randomly on screen
-      itemsPresent++;                                          // count number of items present
-      itemsInContainer[1]++;                                   // count number of items in Bag container
-    }
+    //if (i <= 11 || i >= 13)
+    //{
+    //  crateItems[i].present = true;                            // item scanned
+    //  crateItems[i].container = 1;                             // item in Box container
+    //  crateItems[i].scanned(1);                                // place item randomly on screen
+    //  itemsPresent++;                                          // count number of items present
+    //  itemsInContainer[0]++;                                   // count number of items in Box container
+    //}
+    //else
+    //{
+    //  crateItems[i].present = true;                            // item scanned
+    //  crateItems[i].container = 2;                             // item in Bag container
+    //  crateItems[i].scanned(2);                                // place item randomly on screen
+    //  itemsPresent++;                                          // count number of items present
+    //  itemsInContainer[1]++;                                   // count number of items in Bag container
+    //}
   }
   enlargedContainer = 0;                                       // nothing is enlarged at the start
   println("total items present=" + itemsPresent + ", items in Box=" + itemsInContainer[0] + ", items in Discard=" + itemsInContainer[1]);
@@ -824,8 +829,8 @@ void transit1to2()
   {
     inStr = "";
     latestScan.clear();//latestScan = new ItemTag();                                // resets tagID before activity2
-    //*/boxPort.clear(); //*/
-    //*/bagPort.clear(); //*/
+    boxPort.clear(); //*/
+    bagPort.clear(); //*/
     state = State.ACTIVITY2;
   }
 }
@@ -855,11 +860,11 @@ void activity2()
       {  //checks key against item IDs, then their presence OR scan into diff container
         //println("making present");
         if (crateItems[i].container > 0)                         // if item had previously been scanned
-          itemsInContainer[crateItems[i].container]--;           //  reduce the count for where it used to be
+          itemsInContainer[crateItems[i].container-1]--;         //  reduce the count for where it used to be
         else                                                     // if item has not been scanned before
           itemsPresent++;                                        //  increment the count of total items scanned
-        crateItems[i].scanned(latestScan.container);             // scan item into container 1 or 2, in a random, non-overlapping screen position
         itemsInContainer[latestScan.container-1]++;              // increase the count for the new container
+        crateItems[i].scanned(latestScan.container);             // scan item into container 1 or 2, in a random, non-overlapping screen position
         for (int j = 0; j < crateItems.length; j++)
         {
           if (j != i) crateItems[j].enlarged = false;            // reset the enlargement of all items but the scanned one
@@ -1298,7 +1303,7 @@ void serialEvent(Serial port)
 void printTxt(String[] txt)
 {
   for (int line = 0; line < txt.length; line++)
-    ;//*/printPort.write(txt[line]);  //*/
+    printPort.write(txt[line]);  //*/
 }
   
 //following variables used exclusively in alternator() method, but need to be global
