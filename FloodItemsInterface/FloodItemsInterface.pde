@@ -523,7 +523,7 @@ void setup()
   //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 
-  initialiseData();
+  //initialiseData();
 }
 
 void initialiseData()
@@ -575,6 +575,7 @@ void initialiseData()
 
 void startScreen()
 {
+  initialiseData();
   //if (mousePressed) clickAct = true;                         // prevents buttons on next screen activating
 
   fill(textColour);                                            // colour for all display fonts
@@ -621,6 +622,7 @@ void nameEntry()
   textFont(fontTitle);
   addText("What's your name?", xSandbags, lineY, fontSizeTitle, LEFT, CENTER);
   showSoftKeyboard(false);                                     // show keyboard without Enter key
+  lBut.changeTxt("Restart");
   rBut.drawSelf();
   lBut.drawSelf();
   fill(highlightColour);
@@ -645,6 +647,7 @@ void nameEntry()
     else inStr = "";
     softKey = ' ';
     keyCode = ' ';                                             // Enter has been dealt with, so clear it
+    lBut.changeTxt("Back");
     state = State.ACTIVITY1;                                   // go to next screen
   }
 }
@@ -839,7 +842,6 @@ void activity2()
 {
   fill(textColour);
   addText("Scan into the Grab Bag the items you think you will need", xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
-  rBut.changeTxt("Done");
   if (enlargedContainer == 0)                                  // display Next/Back buttons only when no items are enlarged
   {
     if (itemsInContainer[0] > 0)                               // display Next button only when at least one item scanned into Flood Box
@@ -953,7 +955,6 @@ void activity2()
       inStr = "";
       a1Item = 0;
     }
-    rBut.changeTxt("Next");
     state = State.TRANSIT1TO2;
   }
   
@@ -972,6 +973,7 @@ void report()
 
   fill(textColour);
   addText(((!PPname.equals("")?(PPname + "'s"):"My") + " Flood Preparation Checklist"), xTitleLine, yTitleLine, fontSizeTitle, LEFT, CENTER);
+  rBut.changeTxt("Done");
   rBut.drawSelf();
   lBut.drawSelf();
   
@@ -1055,6 +1057,7 @@ void report()
   if (lBut.clicked())
   {
     clearReport();                                             // clear the report data in case the user changes the scanned items
+    rBut.changeTxt("Next");
     state = State.ACTIVITY2;                                   // go to previous activity
   }
   
@@ -1112,7 +1115,7 @@ void finished()
   if (rBut.clicked())
   {
     rBut.changeTxt("Next");
-    initialiseData();                                          // clear data for restart for next user
+    //initialiseData();                                          // clear data for restart for next user (now done in Welcome screen)
     state = State.STARTSCREEN;
   }
 } 
