@@ -133,7 +133,7 @@ public class Item
     float laFactor = (float)largeImageWidth/largeImg.width;
     int laHeight = (int)(laFactor * largeImg.height);          // scale image to fit width
     if (laHeight <= largeImageHeight)                          //  and also to fit height
-      this.largeImg.resize(largeImageWidth, laHeight);         // then draw it
+      this.largeImg.resize(largeImageWidth, laHeight);
     else
       this.largeImg.resize((int)((float)largeImageWidth*(largeImageHeight)/laHeight), largeImageHeight);
     
@@ -154,12 +154,6 @@ public class Item
   public void scanned(int c)
   {
     present = true;
-    if (enlargedContainer != c)                                  // if now enlarging a different container, erase the next/prev-item and close buttons
-    {                                                            // so they can be redrawn on the other side of the screen
-      closeBut = null;
-      nextItemBut = null;
-      prevItemBut = null;
-    }
     this.container = c;
     int minX, maxX;
     if (this.container == 1)
@@ -190,7 +184,6 @@ public class Item
       int imgX = 0;                                            // items in Box are drawn on the left hand side
       if (this.container == 2)
         imgX = xMid;                                           // items in Bag are drawn on the right hand side
-      int startX = imgX;
       fill(backgroundTransparent);                             // draw rectangle same shade as background but slightly transparent
       noStroke();
       rect(imgX+strokeWeight, yLine+strokeWeight, xMid-2*strokeWeight, windowHeight-yLine-2*strokeWeight);  //  so we can still see other scanned items in this container, but they're fainter
@@ -199,13 +192,9 @@ public class Item
       image(largeImg, imgX, yLine+fontSizeScanBox);
       if (itemsInContainer[this.container-1] > 1)              // if there are >1 items in the enlarged container
       {                                                        //  enable scrolling through the enlarged items + descriptions
-        if (nextItemBut == null)                               // if it doesn't already exist, create the next-item button
-          nextItemBut = new Button(">", startX+xMid-dbutWidth/2-10, dButY, dbutWidth/2, dbutHeight, dBut);
-        if (prevItemBut == null)                               // if it doesn't already exist, create the previous-item button
-          prevItemBut = new Button("<", startX+10, dButY, dbutWidth/2, dbutHeight, dBut);
         //textFont(fontTitle);                                   // (should use fontTitle, but won't notice for ">")
-        nextItemBut.drawSelf();                                // display the next/prev-item buttons
-        prevItemBut.drawSelf();
+        nextItemBut[this.container-1].drawSelf();              // display the next/prev-item buttons for this container (same side as Image)
+        prevItemBut[this.container-1].drawSelf();
         //textFont(fontText);
       }
     }
@@ -241,10 +230,8 @@ public class Item
     for (int i = 0; i < descrip.length; i++)                   // display description of enlarged item
       addText(descrip[i], infoX+5, infoY+2*fontSizeItemName+((i+1)*fontSizeItemDesc), fontSizeItemDesc, LEFT, TOP);
                                                                // display Close button (to unenlarge item)
-    if (closeBut == null)                                      // if it doesn't already exist, create the close-enlargement button
-      closeBut = new Button("Close", infoX+infoWidth-dbutWidth-10, infoY+10, dbutWidth, dbutHeight, dBut);
     textFont(fontTitle);                                       // button text is in title font
-    closeBut.drawSelf();                                       // display the close-enlargement button
+    closeBut[this.container-1].drawSelf();                     // display the close-enlargement button for this container (same side as Descrip)
     textFont(fontText);                                        // put font back to normal
   }
   
@@ -381,7 +368,9 @@ Item[] crateItems = new Item[numItems];                        // all the items 
 Button rBut;                                                   // right button, used for 'Done' or 'Next'
 Button lBut;                                                   // left button, used for 'Back'
 Button enterBut;                                               // Enter button on Welcome screen, used to get started
-Button nextItemBut, prevItemBut, closeBut;                     // next/previous-Item and close buttons, used on enlarged scanned item screen
+Button[] nextItemBut = new Button[2];                          // next item buttons, for Bag and Box; used on enlarged scanned item screen
+Button[] prevItemBut = new Button[2];                          // previous item buttons, for Bag and Box; used on enlarged scanned item screen
+Button[] closeBut = new Button[2];                             // close buttons, for Bag and Box; used on enlarged scanned item screen
 Button keyBut[];                                               // soft keyboard buttons
 String softKeyValue[][] = {{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "+", "Bksp"}, 
                               {"a", "s", "d", "f", "g", "h", "j", "k", "l", "-"}, 
@@ -470,6 +459,13 @@ void setup()
   rBut = new Button("Next", dButX, dButY, dbutWidth, dbutHeight, dBut);
   lBut = new Button("Back", 10, dButY, dbutWidth, dbutHeight, dBut);
   enterBut = new Button("ENTER", xMid-(dbutWidth/2), yHeaderLine+3*fontSizeHeader, dbutWidth, dbutHeight, eBut); 
+  closeBut[0] = new Button("Close", windowWidth-dbutWidth-10, yLine+descripEdge+10, dbutWidth, dbutHeight, dBut);  // Close button on same side as Descrip
+  closeBut[1] = new Button("Close", xMid-dbutWidth-10, yLine+descripEdge+10, dbutWidth, dbutHeight, dBut);
+  nextItemBut[0] = new Button(">", xMid-dbutWidth/2-10, dButY, dbutWidth/2, dbutHeight, dBut);           // next/prev buttons on same side as Image
+  nextItemBut[1] = new Button(">", windowWidth-dbutWidth/2-10, dButY, dbutWidth/2, dbutHeight, dBut);
+  prevItemBut[0] = new Button("<", 10, dButY, dbutWidth/2, dbutHeight, dBut);
+  prevItemBut[1] = new Button("<", xMid+10, dButY, dbutWidth/2, dbutHeight, dBut);
+
   // preload the soft keyboard
   loadSoftKeyboard();
     
@@ -523,9 +519,12 @@ void setup()
   //*/printPort = new Serial(this, "COM6", 19200);                         // Windows //*/
   //printPort = new Serial(this, "/dev/tty.usbserial-A501DGRD", 19200);  // Mac
 
-  //initialiseData();
+  initialiseData();
 }
 
+// clears all the user entered/selected data
+// DO NOT call this from draw() unless you are sure it will be called only once for a given state - remember that draw() will run repeatedly
+// you do not want to keep resetting all the data arrays
 void initialiseData()
 {
   PPname = "";                                                 // clear the participant's name
@@ -552,7 +551,7 @@ void initialiseData()
     crateItems[i].present = false;                             // item not scanned (for testing, set to true)
     crateItems[i].container = 0;                               // item not in a container (for testing, set to 1)
     // for test purposes, pretend item has been scanned into Box/Bag
-    //if (i <= 11 || i >= 13)
+    //if (i < 11 || i > 13)
     //{
     //  crateItems[i].present = true;                            // item scanned
     //  crateItems[i].container = 1;                             // item in Box container
@@ -575,7 +574,6 @@ void initialiseData()
 
 void startScreen()
 {
-  initialiseData();
   //if (mousePressed) clickAct = true;                         // prevents buttons on next screen activating
 
   fill(textColour);                                            // colour for all display fonts
@@ -639,6 +637,7 @@ void nameEntry()
   
   if (lBut.clicked())                                          // if Back clicked
   {
+    initialiseData();                                          // clear data for restart for next user
     state = State.STARTSCREEN;                                 // go to previous screen
   }
   if (rBut.clicked() || keyCode == ENTER)                      // Enter can be used after typing name, rather than having to click Next
@@ -785,7 +784,7 @@ void transit1to2()
     image(couchcat, 0, 0);
 
   int yPos = yTitleLine;
-  int xPos = xCouchCat; //xSandbags;
+  int xPos = xCouchCat;
 
   addText("Great work" + (!PPname.equals("")? (", " + PPname):"") + "!", xPos, yPos, fontSizeTitle, LEFT, CENTER);
   yPos += 2*fontSizeTitle;
@@ -831,7 +830,7 @@ void transit1to2()
   if (rBut.clicked())
   {
     inStr = "";
-    latestScan.clear();//latestScan = new ItemTag();                                // resets tagID before activity2
+    latestScan.clear();                                        // resets tagID before activity2
     boxPort.clear(); //*/
     bagPort.clear(); //*/
     state = State.ACTIVITY2;
@@ -895,15 +894,12 @@ void activity2()
         //println("enlarge item " + i);
       }
 
-      if (crateItems[i].enlarged && closeBut.clicked())        // clicked to Close the enlarged item
+      if (crateItems[i].enlarged && (enlargedContainer > 0) && closeBut[enlargedContainer-1].clicked())        // clicked to Close the enlarged item
       {
         crateItems[i].unenlarge();                             // set nothing enlarged
-        nextItemBut = null;                                    // and remove the next/prev-item and close buttons used with enlargements
-        prevItemBut = null;
-        closeBut = null;
         //println("unenlarge item " + i);
       }
-      else if (crateItems[i].enlarged && (nextItemBut != null && nextItemBut.clicked()) && (itemsInContainer[crateItems[i].container-1]>1))
+      else if (crateItems[i].enlarged && (enlargedContainer > 0) && nextItemBut[enlargedContainer-1].clicked() && (itemsInContainer[crateItems[i].container-1]>1))
       {                                                        // clicked to enlarge next item in same container 
         //println("> clicked");
         for (int j = i+1; j != i; j++)
@@ -917,7 +913,7 @@ void activity2()
           }
         }
       }
-      else if (crateItems[i].enlarged && (prevItemBut != null && prevItemBut.clicked()) && (itemsInContainer[crateItems[i].container-1]>1))
+      else if (crateItems[i].enlarged && (enlargedContainer > 0) && prevItemBut[enlargedContainer-1].clicked() && (itemsInContainer[crateItems[i].container-1]>1))
       {                                                        // clicked to enlarge previous item in same container
         //println("< clicked");
         for (int j = i-1; j != i; j--)
@@ -959,7 +955,7 @@ void activity2()
   }
   
   // can go to next activity only when nothing is enlarged and there is at least one item scanned into Flood Box
-  if (rBut.clicked() && (enlargedContainer == 0) && itemsInContainer[0] > 0) //*/
+  if (rBut.clicked() && (enlargedContainer == 0) && (itemsInContainer[0] > 0)) //*/
   {
     inStr = "";
     state = State.REPORT;
@@ -1097,7 +1093,7 @@ void finished()
   yPos += 3*fontSizeTitle;
   rBut.drawSelf();
   rBut.changeTxt("Restart");
-  textFont(fontText); //activate the main font
+  textFont(fontText);                                          // activate the main font
   addText("Please take your printout to use as", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
   yPos += fontSizeText;
   addText("your Grab Bag checklist", xPos, yPos, fontSizeText, (showBackgroundImages?LEFT:CENTER), CENTER);
@@ -1115,7 +1111,7 @@ void finished()
   if (rBut.clicked())
   {
     rBut.changeTxt("Next");
-    //initialiseData();                                          // clear data for restart for next user (now done in Welcome screen)
+    initialiseData();                                          // clear data for restart for next user
     state = State.STARTSCREEN;
   }
 } 
